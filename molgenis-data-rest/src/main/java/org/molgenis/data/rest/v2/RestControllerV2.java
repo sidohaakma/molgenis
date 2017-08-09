@@ -16,8 +16,6 @@ import org.molgenis.data.support.EntityTypeUtils;
 import org.molgenis.data.support.Href;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.data.support.RepositoryCopier;
-import org.molgenis.security.core.Permission;
-import org.molgenis.security.core.PermissionService;
 import org.molgenis.security.permission.PermissionSystemService;
 import org.molgenis.util.ErrorMessageResponse;
 import org.molgenis.util.ErrorMessageResponse.ErrorMessage;
@@ -75,7 +73,6 @@ public class RestControllerV2
 
 	private final DataService dataService;
 	private final RestService restService;
-	private final PermissionService permissionService;
 	private final PermissionSystemService permissionSystemService;
 	private final LanguageService languageService;
 	private final RepositoryCopier repoCopier;
@@ -131,12 +128,11 @@ public class RestControllerV2
 	}
 
 	@Autowired
-	public RestControllerV2(DataService dataService, PermissionService permissionService, RestService restService,
-			LanguageService languageService, PermissionSystemService permissionSystemService,
-			RepositoryCopier repoCopier, LocalizationService localizationService)
+	public RestControllerV2(DataService dataService, RestService restService, LanguageService languageService,
+			PermissionSystemService permissionSystemService, RepositoryCopier repoCopier,
+			LocalizationService localizationService)
 	{
 		this.dataService = requireNonNull(dataService);
-		this.permissionService = requireNonNull(permissionService);
 		this.restService = requireNonNull(restService);
 		this.languageService = requireNonNull(languageService);
 		this.permissionSystemService = requireNonNull(permissionSystemService);
@@ -371,11 +367,6 @@ public class RestControllerV2
 		String newFullName = EntityTypeUtils.buildFullName(repositoryToCopyFrom.getEntityType().getPackage(),
 				request.getNewEntityName());
 		if (dataService.hasRepository(newFullName)) throw createDuplicateEntityException(newFullName);
-
-		// Permission
-		boolean readPermission = permissionService.hasPermissionOnEntityType(repositoryToCopyFrom.getName(),
-				Permission.READ);
-		if (!readPermission) throw createNoReadPermissionOnEntityException(entityTypeId);
 
 		// Capabilities
 		boolean writableCapabilities = dataService.getCapabilities(repositoryToCopyFrom.getName())
@@ -661,8 +652,7 @@ public class RestControllerV2
 			throw new RuntimeException("attribute : " + attributeName + " does not exist!");
 		}
 
-		return new AttributeResponseV2(entityTypeId, entity, attribute, null, permissionService, dataService,
-				languageService);
+		return new AttributeResponseV2(entityTypeId, entity, attribute, null, dataService, languageService);
 	}
 
 	private EntityCollectionResponseV2 createEntityCollectionResponse(String entityTypeId,
@@ -691,11 +681,11 @@ public class RestControllerV2
 			}
 			AggregateResult aggs = dataService.aggregate(entityTypeId, aggsQ);
 			AttributeResponseV2 xAttrResponse =
-					xAttr != null ? new AttributeResponseV2(entityTypeId, meta, xAttr, fetch, permissionService,
-							dataService, languageService) : null;
+					xAttr != null ? new AttributeResponseV2(entityTypeId, meta, xAttr, fetch, dataService,
+							languageService) : null;
 			AttributeResponseV2 yAttrResponse =
-					yAttr != null ? new AttributeResponseV2(entityTypeId, meta, yAttr, fetch, permissionService,
-							dataService, languageService) : null;
+					yAttr != null ? new AttributeResponseV2(entityTypeId, meta, yAttr, fetch, dataService,
+							languageService) : null;
 			return new EntityAggregatesResponse(aggs, xAttrResponse, yAttrResponse, BASE_URI + '/' + entityTypeId);
 		}
 		else
@@ -737,7 +727,7 @@ public class RestControllerV2
 			}
 
 			return new EntityCollectionResponseV2(pager, entities, fetch, BASE_URI + '/' + entityTypeId, meta,
-					permissionService, dataService, languageService, prevHref, nextHref);
+					dataService, languageService, prevHref, nextHref);
 		}
 	}
 
@@ -769,8 +759,7 @@ public class RestControllerV2
 
 	private void createEntityTypeResponse(EntityType entityType, Fetch fetch, Map<String, Object> responseData)
 	{
-		responseData.put("_meta",
-				new EntityTypeResponseV2(entityType, fetch, permissionService, dataService, languageService));
+		responseData.put("_meta", new EntityTypeResponseV2(entityType, fetch, dataService, languageService));
 	}
 
 	private void createEntityValuesResponse(Entity entity, Fetch fetch, Map<String, Object> responseData)
@@ -867,5 +856,6 @@ public class RestControllerV2
 				}
 			}
 		}
+		responseData.put("writable", entity.isWritable());
 	}
 }

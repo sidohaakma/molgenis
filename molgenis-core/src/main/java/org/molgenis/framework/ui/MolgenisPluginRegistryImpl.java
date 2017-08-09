@@ -47,4 +47,10 @@ public class MolgenisPluginRegistryImpl implements MolgenisPluginRegistry
 	{
 		return Iterables.find(this, molgenisPlugin -> molgenisPlugin.getId().equals(id), null);
 	}
+
+	@Override
+	public Iterable<MolgenisPlugin> getPlugins()
+	{
+		return this;
+	}
 }

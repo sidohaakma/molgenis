@@ -36,6 +36,8 @@ public class EntityTypeMetadata extends SystemEntityType
 	public static final String EXTENDS = "extends";
 	public static final String TAGS = "tags";
 	public static final String BACKEND = "backend";
+	public static final String IS_ENTITY_LEVEL_SECURITY = "isEntityLevelSecurity";
+	public static final String ENTITY_LEVEL_SECURITY_INHERITANCE = "entityLevelSecurityInheritance";
 	public static final String INDEXING_DEPTH = "indexingDepth";
 
 	private List<String> backendEnumOptions;
@@ -57,7 +59,9 @@ public class EntityTypeMetadata extends SystemEntityType
 		addAttribute(ID, ROLE_ID).setAuto(true).setLabel("Identifier");
 		addAttribute(LABEL, ROLE_LABEL, ROLE_LOOKUP).setNillable(false).setLabel("Label");
 		addAttribute(DESCRIPTION).setDataType(TEXT).setLabel("Description");
-		addAttribute(PACKAGE).setDataType(XREF).setRefEntity(packageMetadata).setLabel("Package");
+		Attribute packageAttr = addAttribute(PACKAGE).setDataType(XREF)
+													 .setRefEntity(packageMetadata)
+													 .setLabel("Package");
 		Attribute refAttr = attributeMetadata.getAttribute(AttributeMetadata.ENTITY);
 		addAttribute(ATTRIBUTES).setDataType(ONE_TO_MANY)
 								.setRefEntity(attributeMetadata)
@@ -88,6 +92,15 @@ public class EntityTypeMetadata extends SystemEntityType
 									.setNillable(false)
 									.setDefaultValue(String.valueOf(1))
 									.setRangeMin(1L);
+		addAttribute(IS_ENTITY_LEVEL_SECURITY).setDataType(BOOL)
+											  .setNillable(false)
+											  .setLabel("Entity-level security")
+											  .setDefaultValue(FALSE.toString());
+		addAttribute(ENTITY_LEVEL_SECURITY_INHERITANCE).setDataType(STRING)
+													   .setLabel(
+															   "Entity-level security inheritance"); // FIXME how to make this into a XREF?
+
+		setEntityLevelSecurityInheritance(packageAttr);
 	}
 
 	/**

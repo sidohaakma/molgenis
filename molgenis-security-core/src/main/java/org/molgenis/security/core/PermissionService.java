@@ -5,4 +5,6 @@ public interface PermissionService
 	boolean hasPermissionOnPlugin(String pluginId, Permission permission);
 
 	boolean hasPermissionOnEntityType(String entityTypeId, Permission permission);
+
+	boolean hasPermissionOnEntity(String entityTypeId, Object entityId, Permission permission);
 }

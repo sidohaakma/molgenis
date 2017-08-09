@@ -36,6 +36,7 @@ public class EntityType extends StaticEntity
 {
 	private transient Map<String, Attribute> cachedOwnAttrs;
 	private transient Boolean cachedHasAttrWithExpression;
+	private boolean readOnly = false;
 
 	public EntityType(Entity entity)
 	{
@@ -702,6 +703,40 @@ public class EntityType extends StaticEntity
 		return getInt(INDEXING_DEPTH);
 	}
 
+	public EntityType setEntityLevelSecurity(boolean entityLevelSecurity)
+	{
+		set(IS_ENTITY_LEVEL_SECURITY, entityLevelSecurity);
+		return this;
+	}
+
+	public boolean isEntityLevelSecurity()
+	{
+		Boolean entityLevelSecurity = getBoolean(IS_ENTITY_LEVEL_SECURITY);
+		return entityLevelSecurity != null ? entityLevelSecurity : false;
+	}
+
+	public EntityType setEntityLevelSecurityInheritance(Attribute attribute)
+	{
+		set(ENTITY_LEVEL_SECURITY_INHERITANCE, attribute != null ? attribute.getName() : null);
+		return this;
+	}
+
+	public Attribute getEntityLevelSecurityInheritance()
+	{
+		String attributeName = getString(ENTITY_LEVEL_SECURITY_INHERITANCE);
+		return attributeName != null ? getAttribute(attributeName) : null;
+	}
+
+	public void setReadOnly(boolean readOnly)
+	{
+		this.readOnly = readOnly;
+	}
+
+	public boolean isReadOnly()
+	{
+		return this.readOnly;
+	}
+
 	/**
 	 * Returns all atomic attributes. In case of compound attributes (attributes consisting of atomic attributes) only
 	 * the descendant atomic attributes are returned. The compound attribute itself is not returned.
@@ -764,6 +799,7 @@ public class EntityType extends StaticEntity
 	{
 		setAbstract(false);
 		setIndexingDepth(1);
+		setEntityLevelSecurity(false);
 	}
 
 	private Map<String, Attribute> getCachedOwnAttrs()

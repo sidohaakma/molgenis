@@ -58,8 +58,7 @@ public class NavigatorControllerTest
 		mockMvc.perform(get(NavigatorController.URI))
 			   .andExpect(status().isOk())
 			   .andExpect(view().name("view-navigator"))
-			   .
-					   andExpect(model().attribute("baseUrl", "/test/path"))
+			   .andExpect(model().attribute("baseUrl", "/test/path"))
 			   .
 					   andExpect(model().attribute("lng", "AABBCC"))
 			   .

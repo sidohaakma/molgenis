@@ -341,8 +341,8 @@ public class SortaServiceController extends MolgenisPluginController
 		});
 
 		EntityPager pager = new EntityPager(start, num, count, null);
-		return new EntityCollectionResponse(pager, entityMaps, "/match/retrieve", ontologyTermMetaData,
-				permissionService, dataService, languageService);
+		return new EntityCollectionResponse(pager, entityMaps, "/match/retrieve", ontologyTermMetaData, dataService,
+				languageService);
 	}
 
 	@RequestMapping(method = POST, value = "/match")
