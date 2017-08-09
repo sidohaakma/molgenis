@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>molgenis-navigator</artifactId>
-
+    <name>navigator</name>
     <build>
         <plugins>
             <plugin>
@@ -28,7 +28,7 @@
                         </goals>
                         <phase>initialize</phase>
                         <configuration>
-                            <nodeVersion>v7.6.0</nodeVersion>
+                            <nodeVersion>v6.11.0</nodeVersion>
                             <yarnVersion>v0.24.5</yarnVersion>
                         </configuration>
                     </execution>

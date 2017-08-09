@@ -1,15 +1,13 @@
 package org.molgenis.genomebrowser;
 
 import com.google.auto.value.AutoValue;
-
-import javax.annotation.Nullable;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.genomebrowser.meta.GenomeBrowserAttributes;
 import org.molgenis.genomebrowser.meta.GenomeBrowserSettings;
 
+import javax.annotation.Nullable;
 import java.util.stream.Collectors;
 
 @AutoValue
@@ -27,8 +25,7 @@ public abstract class GenomeBrowserTrack
 	public static GenomeBrowserTrack create(GenomeBrowserSettings settings)
 	{
 		return new AutoValue_GenomeBrowserTrack(settings.getIdentifier(), settings.getLabel(),
-				settings.getLabelAttr().getName(),
-				settings.getEntity(), settings.getTrackType(),
+				settings.getLabelAttr().getName(), settings.getEntity(), settings.getTrackType(),
 				settings.getMolgenisReferenceTracks().collect(Collectors.toList()), settings.getMolgenisReferenceMode(),
 				settings.getGenomeBrowserAttrs(), settings.getActions(), settings.getAttrs(), settings.getScoreAttr(),
 				settings.getExonKey());
