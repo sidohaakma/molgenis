@@ -39,10 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -67,13 +66,22 @@ import java.util.Map;
 import java.util.Properties;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static java.lang.String.format;
+import static org.apache.commons.compress.utils.CharsetNames.UTF_8;
 import static org.molgenis.framework.ui.ResourcePathPatterns.*;
 import static org.molgenis.security.UriConstants.PATH_SEGMENT_APPS;
 import static org.molgenis.ui.FileStoreConstants.FILE_STORE_PLUGIN_APPS_PATH;
 
 @Import({ PlatformConfig.class, RdfConverter.class })
+@PropertySources({
+		@PropertySource(ignoreResourceNotFound = true, encoding = UTF_8, value = "file:${molgenis.home:\\/srv\\/molgenis\\/.molgenis}/molgenis-server.properties"),
+		@PropertySource(ignoreResourceNotFound = true, encoding = UTF_8, value = "classpath:molgenis-server.properties") })
 public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 {
+	private static final String MOLGENIS_HOME = "molgenis.home";
+	private static final String DEFAULT_MOLGENIS_HOME = "/srv/molgenis/.molgenis";
+	private static final String MOLGENIS_PROPERTIES = "molgenis-server.properties";
+
 	@Autowired
 	private DataService dataService;
 
@@ -204,8 +212,8 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 	@Bean
 	public MolgenisInterceptor molgenisInterceptor()
 	{
-		return new MolgenisInterceptor(resourceFingerprintRegistry(), themeFingerprintRegistry(), templateResourceUtils(), appSettings,
-				authenticationSettings,languageService, environment);
+		return new MolgenisInterceptor(resourceFingerprintRegistry(), themeFingerprintRegistry(),
+				templateResourceUtils(), appSettings, authenticationSettings, languageService, environment);
 	}
 
 	@Bean
@@ -227,28 +235,34 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 	}
 
 	@Bean
-	public static PropertySourcesPlaceholderConfigurer properties()
+	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer()
 	{
-		PropertySourcesPlaceholderConfigurer pspc = new PropertySourcesPlaceholderConfigurer();
-		Resource[] resources = new Resource[] {
-				new FileSystemResource(System.getProperty("molgenis.home") + "/molgenis-server.properties"),
-				new ClassPathResource("/molgenis.properties") };
-		pspc.setLocations(resources);
-		pspc.setFileEncoding("UTF-8");
-		pspc.setIgnoreUnresolvablePlaceholders(true);
-		pspc.setIgnoreResourceNotFound(true);
-		pspc.setNullValue("@null");
-		return pspc;
+		return new PropertySourcesPlaceholderConfigurer();
 	}
+
+	//	@Bean
+	//	public static PropertySourcesPlaceholderConfigurer properties()
+	//	{
+	//		PropertySourcesPlaceholderConfigurer pspc = new PropertySourcesPlaceholderConfigurer();
+	//		Resource[] resources = new Resource[] {
+	//				new FileSystemResource(System.getProperty(MOLGENIS_HOME) + File.separator + MOLGENIS_PROPERTIES),
+	//				new ClassPathResource(File.separator + MOLGENIS_PROPERTIES) };
+	//		pspc.setLocations(resources);
+	//		pspc.setFileEncoding(UTF_8);
+	//		pspc.setIgnoreUnresolvablePlaceholders(true);
+	//		pspc.setIgnoreResourceNotFound(true);
+	//		pspc.setNullValue("@null");
+	//		return pspc;
+	//	}
 
 	@Bean
 	public FileStore fileStore()
 	{
 		// get molgenis home directory
-		String molgenisHomeDir = System.getProperty("molgenis.home");
+		String molgenisHomeDir = System.getProperty(MOLGENIS_HOME, DEFAULT_MOLGENIS_HOME);
 		if (molgenisHomeDir == null)
 		{
-			throw new IllegalArgumentException("missing required java system property 'molgenis.home'");
+			throw new IllegalArgumentException(format("Missing required JAVA system property [%s]", MOLGENIS_HOME));
 		}
 		if (!molgenisHomeDir.endsWith(File.separator)) molgenisHomeDir = molgenisHomeDir + File.separator;
 
@@ -259,7 +273,7 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 		{
 			if (!molgenisDataDir.mkdirs())
 			{
-				throw new RuntimeException("failed to create directory: " + molgenisFileStoreDirStr);
+				throw new RuntimeException(format("Failed to create directory: [%s]", molgenisFileStoreDirStr));
 			}
 		}
 
@@ -360,16 +374,18 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 	public void validateMolgenisServerProperties()
 	{
 		// validate properties defined in molgenis-server.properties
-		String path = System.getProperty("molgenis.home") + File.separator + "molgenis-server.properties";
+		String path = System.getProperty(MOLGENIS_HOME, DEFAULT_MOLGENIS_HOME) + File.separator + MOLGENIS_PROPERTIES;
 		if (environment == null)
 		{
-			throw new RuntimeException("Missing required property 'environment' in " + path
-					+ ", allowed values are [development, production].");
+			throw new RuntimeException(
+					format("Missing required property 'environment' in [%s] allowed values are [development, production].",
+							path));
 		}
 		else if (!environment.equals("development") && !environment.equals("production"))
 		{
-			throw new RuntimeException("Invalid value '" + environment + "' for property 'environment' in " + path
-					+ ", allowed values are [development, production].");
+			throw new RuntimeException(
+					format("Invalid value [{0}] for property 'environment' in [{1}], allowed values are [development, production].",
+							environment, path));
 		}
 	}
 }

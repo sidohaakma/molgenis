@@ -31,13 +31,18 @@ public class DatabaseConfig implements TransactionManagementConfigurer
 	 */
 	private static final int MAX_POOL_SIZE = 95;
 
-	@Value("${db_driver:org.postgresql.Driver}")
+	private static final String MOLGENIS_DEFAULT_DB_DRIVER = "org.postgresql.Driver";
+	private static final String MOLGENIS_DEFAULT_DB_URI = "jdbc\\:postgresql\\://localhost/molgenis";
+	private static final String MOLGENIS_DEFAULT_DB_USER = "molgenis";
+	private static final String MOLGENIS_DEFAULT_DB_PW = "molgenis";
+
+	@Value("${db_driver:" + MOLGENIS_DEFAULT_DB_DRIVER + "}")
 	private String dbDriverClass;
-	@Value("${db_uri:@null}")
+	@Value("${db_uri:" + MOLGENIS_DEFAULT_DB_URI + "}")
 	private String dbJdbcUri;
-	@Value("${db_user:@null}")
+	@Value("${db_user:" + MOLGENIS_DEFAULT_DB_USER + "}")
 	private String dbUser;
-	@Value("${db_password:@null}")
+	@Value("${db_password:" + MOLGENIS_DEFAULT_DB_PW + "}")
 	private String dbPassword;
 
 	@Autowired
