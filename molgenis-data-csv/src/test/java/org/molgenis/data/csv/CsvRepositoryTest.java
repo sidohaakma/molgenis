@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.molgenis.data.AbstractMolgenisSpringTest;
 import org.molgenis.data.Entity;
+import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityTypeFactory;
@@ -170,8 +171,8 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 		}
 	}
 
-	@Test
-	public void iterator_noValues() throws IOException
+	@Test(expectedExceptions = MolgenisDataException.class, expectedExceptionsMessageRegExp = "Header was found, but no data is present in file \\[novalues\\.csv\\]")
+	public void testIteratorNoValues() throws IOException
 	{
 		try (CsvRepository csvRepository = new CsvRepository(novalues, entityTypeFactory, attrMetaFactory, null))
 		{
@@ -181,7 +182,7 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 	}
 
 	@Test
-	public void iterator_emptyValues() throws IOException
+	public void testIteratorEmptyValues() throws IOException
 	{
 		try (CsvRepository csvRepository = new CsvRepository(emptyvalues, entityTypeFactory, attrMetaFactory, null))
 		{
@@ -192,7 +193,7 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 	}
 
 	@Test
-	public void iterator_tsv() throws IOException
+	public void testIteratorTsv() throws IOException
 	{
 		try (CsvRepository tsvRepository = new CsvRepository(testtsv, entityTypeFactory, attrMetaFactory, null))
 		{
@@ -204,15 +205,14 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 		}
 	}
 
-	@Test
-	public void iterator_emptylines() throws IOException
+	@Test(expectedExceptions = MolgenisDataException.class, expectedExceptionsMessageRegExp = "Column count \\[1\\] is not greater or equal then header count \\[2\\] \\(in CSV-file \\[emptylines\\.csv\\]\\)")
+	public void testIteratorEmptyLines() throws IOException
 	{
 		try (CsvRepository csvRepository = new CsvRepository(emptylines, entityTypeFactory, attrMetaFactory, null))
 		{
 			Iterator<Entity> it = csvRepository.iterator();
 			Entity entity = it.next();
 			assertEquals(entity.get("col1"), "val1");
-			assertEquals(entity.get("col2"), "val2");
 			assertFalse(it.hasNext());
 		}
 	}

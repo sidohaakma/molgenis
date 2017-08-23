@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static java.lang.String.format;
+
 public class ZipFileUtil
 {
 	private static final Logger LOG = LoggerFactory.getLogger(ZipFileUtil.class);
@@ -20,16 +22,25 @@ public class ZipFileUtil
 		int len;
 		try
 		{
-			while ((len = in.read(buffer)) >= 0) out.write(buffer, 0, len);
+			while ((len = in.read(buffer)) >= 0)
+			{
+				out.write(buffer, 0, len);
+			}
 		}
 		finally
 		{
-			if (in != null) in.close();
-			if (out != null) out.close();
+			if (in != null)
+			{
+				in.close();
+			}
+			if (out != null)
+			{
+				out.close();
+			}
 		}
 	}
 
-	public static List<File> unzip(File file) throws FileNotFoundException, IOException
+	public static List<File> unzip(File file) throws IOException
 	{
 
 		List<File> unzippedFiles = new ArrayList<>();
@@ -50,13 +61,22 @@ public class ZipFileUtil
 				if (entry.isDirectory())
 				{
 					LOG.info("Extracting directory: " + entry.getName());
-					if (!(new File(file.getParentFile(), entry.getName())).mkdir())
+					File newDirectory = new File(file.getParentFile(), entry.getName());
+					if (!newDirectory.exists())
 					{
-						throw new RuntimeException("Failed to create directory");
+						if (!newDirectory.mkdir())
+						{
+							throw new RuntimeException(
+									format("Failed to create directory [%s]", newDirectory.getAbsolutePath()));
+						}
+					}
+					else
+					{
+						LOG.warn(format("Directory [%s] exists", newDirectory.getAbsolutePath()));
 					}
 					continue;
 				}
-				LOG.info("Extracting directory: " + entry.getName());
+				LOG.info(format("Extracting directory [%s]", entry.getName()));
 				File newFile = new File(file.getParent(), entry.getName());
 				copyInputStream(zipFile.getInputStream(entry), new BufferedOutputStream(new FileOutputStream(newFile)));
 
@@ -65,7 +85,10 @@ public class ZipFileUtil
 		}
 		finally
 		{
-			if (zipFile != null) zipFile.close();
+			if (zipFile != null)
+			{
+				zipFile.close();
+			}
 		}
 		return unzippedFiles;
 	}

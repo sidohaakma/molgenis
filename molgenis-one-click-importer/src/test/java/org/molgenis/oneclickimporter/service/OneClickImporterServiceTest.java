@@ -3,6 +3,7 @@ package org.molgenis.oneclickimporter.service;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.mockito.Mock;
+import org.molgenis.data.csv.services.CsvService;
 import org.molgenis.data.meta.AttributeType;
 import org.molgenis.oneclickimporter.exceptions.EmptySheetException;
 import org.molgenis.oneclickimporter.model.Column;

@@ -3,13 +3,17 @@ package org.molgenis.oneclickimporter.job;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.mockito.Mock;
+import org.molgenis.data.csv.services.CsvService;
 import org.molgenis.data.jobs.Progress;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.file.FileStore;
 import org.molgenis.oneclickimporter.exceptions.EmptySheetException;
 import org.molgenis.oneclickimporter.exceptions.UnknownFileTypeException;
 import org.molgenis.oneclickimporter.model.DataCollection;
-import org.molgenis.oneclickimporter.service.*;
+import org.molgenis.oneclickimporter.service.EntityService;
+import org.molgenis.oneclickimporter.service.ExcelService;
+import org.molgenis.oneclickimporter.service.OneClickImporterNamingService;
+import org.molgenis.oneclickimporter.service.OneClickImporterService;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

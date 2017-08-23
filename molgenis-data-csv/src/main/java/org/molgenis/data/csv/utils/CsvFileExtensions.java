@@ -1,4 +1,4 @@
-package org.molgenis.data.csv;
+package org.molgenis.data.csv.utils;
 
 import com.google.common.collect.ImmutableSet;
 

@@ -1,6 +1,7 @@
 package org.molgenis.data.csv;
 
 import org.molgenis.data.FileRepositoryCollectionFactory;
+import org.molgenis.data.csv.utils.CsvFileExtensions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 

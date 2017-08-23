@@ -2,7 +2,8 @@ package org.molgenis.oneclickimporter.service;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.molgenis.data.MolgenisDataException;
-import org.molgenis.oneclickimporter.service.Impl.CsvServiceImpl;
+import org.molgenis.data.csv.services.CsvService;
+import org.molgenis.data.csv.services.CsvServiceImpl;
 import org.testng.annotations.Test;
 
 import java.io.IOException;

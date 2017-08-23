@@ -2,13 +2,19 @@ package org.molgenis.oneclickimporter.job;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.molgenis.data.csv.services.CsvService;
+import org.molgenis.data.csv.utils.CsvFileExtensions;
+import org.molgenis.data.excel.ExcelFileExtensions;
 import org.molgenis.data.jobs.Progress;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.file.FileStore;
 import org.molgenis.oneclickimporter.exceptions.EmptySheetException;
 import org.molgenis.oneclickimporter.exceptions.UnknownFileTypeException;
 import org.molgenis.oneclickimporter.model.DataCollection;
-import org.molgenis.oneclickimporter.service.*;
+import org.molgenis.oneclickimporter.service.EntityService;
+import org.molgenis.oneclickimporter.service.ExcelService;
+import org.molgenis.oneclickimporter.service.OneClickImporterNamingService;
+import org.molgenis.oneclickimporter.service.OneClickImporterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +26,6 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Objects.requireNonNull;
 import static org.molgenis.util.FileExtensionUtils.findExtensionFromPossibilities;
-import static org.molgenis.util.file.ZipFileUtil.unzip;
 
 @Component
 public class OneClickImportJob
@@ -60,34 +65,17 @@ public class OneClickImportJob
 					String.format("File [%s] does not have a valid extension, supported: [csv, xlsx, zip, xls]",
 							filename));
 		}
-		else if (fileExtension.equals("xls") || fileExtension.equals("xlsx"))
+		else if (fileExtension.equals(ExcelFileExtensions.XLS.toString()) || fileExtension.equals(
+				ExcelFileExtensions.XLSX.toString()))
 		{
 			List<Sheet> sheets = excelService.buildExcelSheetsFromFile(file);
 			dataCollections.addAll(oneClickImporterService.buildDataCollectionsFromExcel(sheets));
 		}
-		else if (fileExtension.equals("csv"))
+		else if (fileExtension.equals(CsvFileExtensions.CSV) || fileExtension.equals(CsvFileExtensions.ZIP))
 		{
 			List<String[]> lines = csvService.buildLinesFromFile(file);
 			dataCollections.add(oneClickImporterService.buildDataCollectionFromCsv(
 					oneClickImporterNamingService.createValidIdFromFileName(filename), lines));
-		}
-		else if (fileExtension.equals("zip"))
-		{
-			List<File> filesInZip = unzip(file);
-			for (File fileInZip : filesInZip)
-			{
-				String fileInZipExtension = findExtensionFromPossibilities(fileInZip.getName(), newHashSet("csv"));
-				if (fileInZipExtension != null)
-				{
-					List<String[]> lines = csvService.buildLinesFromFile(fileInZip);
-					dataCollections.add(oneClickImporterService.buildDataCollectionFromCsv(
-							oneClickImporterNamingService.createValidIdFromFileName(fileInZip.getName()), lines));
-				}
-				else
-				{
-					throw new UnknownFileTypeException("Zip file contains files which are not of type CSV");
-				}
-			}
 		}
 
 		List<EntityType> entityTypes = newArrayList();

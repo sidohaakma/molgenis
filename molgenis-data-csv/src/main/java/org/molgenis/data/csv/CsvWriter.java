@@ -2,6 +2,7 @@ package org.molgenis.data.csv;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.opencsv.CSVWriter;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.meta.model.Attribute;
@@ -19,7 +20,7 @@ public class CsvWriter extends AbstractWritable
 {
 	public static final char DEFAULT_SEPARATOR = ',';
 
-	private final au.com.bytecode.opencsv.CSVWriter csvWriter;
+	private final CSVWriter csvWriter;
 	/**
 	 * process cells before writing
 	 */
@@ -48,12 +49,11 @@ public class CsvWriter extends AbstractWritable
 		if (writer == null) throw new IllegalArgumentException("writer is null");
 		if (noQuotes)
 		{
-			this.csvWriter = new au.com.bytecode.opencsv.CSVWriter(writer, separator,
-					au.com.bytecode.opencsv.CSVWriter.NO_QUOTE_CHARACTER);
+			this.csvWriter = new CSVWriter(writer, separator, CSVWriter.NO_QUOTE_CHARACTER);
 		}
 		else
 		{
-			this.csvWriter = new au.com.bytecode.opencsv.CSVWriter(writer, separator);
+			this.csvWriter = new CSVWriter(writer, separator);
 		}
 	}
 

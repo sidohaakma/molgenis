@@ -6,6 +6,7 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.MolgenisInvalidFormatException;
 import org.molgenis.data.Repository;
+import org.molgenis.data.csv.utils.CsvFileExtensions;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.data.meta.model.EntityTypeFactory;

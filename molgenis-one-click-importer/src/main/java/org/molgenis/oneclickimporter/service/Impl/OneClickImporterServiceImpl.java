@@ -6,10 +6,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.util.LocaleUtil;
 import org.molgenis.data.MolgenisDataException;
+import org.molgenis.data.csv.services.CsvService;
 import org.molgenis.data.meta.AttributeType;
 import org.molgenis.oneclickimporter.model.Column;
 import org.molgenis.oneclickimporter.model.DataCollection;
-import org.molgenis.oneclickimporter.service.CsvService;
 import org.molgenis.oneclickimporter.service.OneClickImporterService;
 import org.springframework.stereotype.Component;
 
@@ -60,7 +60,7 @@ public class OneClickImporterServiceImpl implements OneClickImporterService
 		List<Column> columns = newArrayList();
 
 		String[] headers = lines.get(0);
-		lines.remove(0); // Remove the header
+		lines.remove(0);
 
 		int columnIndex = 0;
 		for (String header : headers)
@@ -161,6 +161,7 @@ public class OneClickImporterServiceImpl implements OneClickImporterService
 	private List<Object> getColumnDataFromLines(List<String[]> lines, int columnIndex)
 	{
 		List<Object> dataValues = newLinkedList();
+		// skip header
 		lines.forEach(line ->
 		{
 			String[] tokens = line;
