@@ -3,7 +3,10 @@ package org.molgenis.data.excel;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.molgenis.data.Entity;
+import org.molgenis.data.excel.service.ExcelService;
+import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.meta.model.EntityType;
+import org.molgenis.data.processor.AbstractCellProcessor;
 import org.molgenis.data.processor.CellProcessor;
 import org.molgenis.data.support.DynamicEntity;
 import org.springframework.util.LinkedCaseInsensitiveMap;
@@ -24,6 +27,8 @@ public class ExcelEntity extends DynamicEntity
 	private final List<CellProcessor> cellProcessors;
 
 	private transient Map<String, Object> cachedValueMap;
+
+	private ExcelService service = new ExcelServiceImpl();
 
 	public ExcelEntity(Row row, Map<String, Integer> colNamesMap, List<CellProcessor> cellProcessors,
 			EntityType entityType)
@@ -64,7 +69,7 @@ public class ExcelEntity extends DynamicEntity
 				Cell cell = row.getCell(col);
 				if (cell != null)
 				{
-					value = ExcelUtils.toValue(cell, cellProcessors);
+					value = processCell(service.toValue(cell), false);
 				}
 				else
 				{
@@ -123,4 +128,10 @@ public class ExcelEntity extends DynamicEntity
 	{
 		return colNamesMap.keySet();
 	}
+
+	private String processCell(String value, boolean isHeader)
+	{
+		return AbstractCellProcessor.processCell(value, isHeader, cellProcessors);
+	}
+
 }

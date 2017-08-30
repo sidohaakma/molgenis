@@ -1,4 +1,4 @@
-package org.molgenis.data.excel;
+package org.molgenis.data.excel.utils;
 
 import com.google.common.collect.ImmutableSet;
 

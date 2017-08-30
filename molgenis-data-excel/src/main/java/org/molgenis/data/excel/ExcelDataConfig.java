@@ -1,6 +1,7 @@
 package org.molgenis.data.excel;
 
 import org.molgenis.data.FileRepositoryCollectionFactory;
+import org.molgenis.data.excel.utils.ExcelFileExtensions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 

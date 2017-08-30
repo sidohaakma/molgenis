@@ -7,13 +7,13 @@ import org.molgenis.data.MolgenisInvalidFormatException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityTypeFactory;
+import org.molgenis.util.ResourceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
@@ -27,28 +27,15 @@ public class ExcelRepositorySourceTest extends AbstractMolgenisSpringTest
 	@Autowired
 	private AttributeFactory attrMetaFactory;
 
-	private InputStream is;
 	private ExcelRepositoryCollection excelRepositoryCollection;
 
 	@BeforeMethod
 	public void beforeMethod() throws MolgenisInvalidFormatException, IOException
 	{
-		is = getClass().getResourceAsStream("/test.xls");
-		excelRepositoryCollection = new ExcelRepositoryCollection("test.xls", is);
+		File file = ResourceUtils.getFile(getClass(), "/test-multiple-valid-sheets.xls");
+		excelRepositoryCollection = new ExcelRepositoryCollection(file);
 		excelRepositoryCollection.setEntityTypeFactory(entityTypeFactory);
 		excelRepositoryCollection.setAttributeFactory(attrMetaFactory);
-	}
-
-	@AfterMethod
-	public void afterMethod() throws IOException
-	{
-		is.close();
-	}
-
-	@Test
-	public void getNumberOfSheets()
-	{
-		assertEquals(excelRepositoryCollection.getNumberOfSheets(), 3);
 	}
 
 	@Test
