@@ -55,58 +55,18 @@ public class CsvIteratorTest extends AbstractMolgenisSpringTest
 	}
 
 	@Test
-	public void testIteratorFromZipFile() throws IOException
-	{
-		File zipFile = createTmpFileForResource("zipFile.zip");
-
-		CsvIterator it = new CsvIterator(zipFile, "testdata", null, null, entityType);
-		assertEquals(it.getColNamesMap().keySet(), Sets.newLinkedHashSet(Arrays.asList("col1", "col2")));
-		assertEquals(Iterators.size(it), 5);
-	}
-
-	@Test
-	public void testIteratorFromZipFileWithFolder() throws IOException
-	{
-		File zipFile = createTmpFileForResource("zipFileWithFolder.zip");
-
-		CsvIterator it = new CsvIterator(zipFile, "testdata", null, null, entityType);
-		assertEquals(it.getColNamesMap().keySet(), Sets.newLinkedHashSet(Arrays.asList("col1", "col2")));
-		assertEquals(Iterators.size(it), 5);
-	}
-
-	@Test
 	public void testIteratorFromCsvFileWithBom() throws IOException
 	{
 		File csvFile = createTmpFileForResource("testDataWithBom.csv");
 
-		CsvIterator it = new CsvIterator(csvFile, "testdata", null, null, entityType);
+		CsvIterator it = new CsvIterator(csvFile, "testDataWithBom", null, null, entityType);
 		assertEquals(it.getColNamesMap().keySet(), Sets.newLinkedHashSet(Arrays.asList("col1", "col2")));
 		assertEquals(Iterators.size(it), 5);
 
-		it = new CsvIterator(csvFile, "testdata", null, null, entityType);
+		it = new CsvIterator(csvFile, "testDataWithBom", null, null, entityType);
 		Entity entity = it.next();
 		assertEquals(entity.get("col1"), "val1");
 		assertEquals(entity.get("col2"), "val2");
-	}
-
-	@Test
-	public void testIteratorFromZipFileWithBom() throws IOException
-	{
-		File zipFile = createTmpFileForResource("zipFileWithBom.zip");
-
-		CsvIterator it = new CsvIterator(zipFile, "testDataWithBom", null, null, entityType);
-		assertEquals(it.getColNamesMap().keySet(), Sets.newLinkedHashSet(Arrays.asList("col1", "col2")));
-		assertEquals(Iterators.size(it), 5);
-	}
-
-	@Test
-	public void testIteratorFromZipFileWithFolderWithBom() throws IOException
-	{
-		File zipFile = createTmpFileForResource("zipFileWithFolderWithBom.zip");
-
-		CsvIterator it = new CsvIterator(zipFile, "testDataWithBom", null, null, entityType);
-		assertEquals(it.getColNamesMap().keySet(), Sets.newLinkedHashSet(Arrays.asList("col1", "col2")));
-		assertEquals(Iterators.size(it), 5);
 	}
 
 	private File createTmpFileForResource(String fileName) throws IOException
@@ -116,4 +76,5 @@ public class CsvIteratorTest extends AbstractMolgenisSpringTest
 		FileCopyUtils.copy(in, new FileOutputStream(csvFile));
 		return csvFile;
 	}
+
 }

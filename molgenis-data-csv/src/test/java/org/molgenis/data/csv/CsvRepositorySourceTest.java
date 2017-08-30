@@ -27,7 +27,7 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 	private AttributeFactory attrMetaFactory;
 
 	@Test
-	public void getRepositoriesCsv() throws IOException, MolgenisInvalidFormatException
+	public void testGetRepositoriesCsv() throws IOException, MolgenisInvalidFormatException
 	{
 		InputStream in = getClass().getResourceAsStream("/testdata.csv");
 		File csvFile = new File(FileUtils.getTempDirectory(), "testdata.csv");
@@ -43,7 +43,7 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 	}
 
 	@Test
-	public void getRepositoriesZip() throws IOException, MolgenisInvalidFormatException
+	public void testGetRepositoriesZip() throws IOException, MolgenisInvalidFormatException
 	{
 		File zip = File.createTempFile("file", ".zip");
 		try (FileOutputStream fos = new FileOutputStream(zip))
@@ -92,4 +92,59 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		assertNotNull(repo.getRepository("1"));
 
 	}
+
+	@Test
+	public void testIteratorFromZipFile() throws IOException
+	{
+		File zipFile = createTmpFileForResource("zipFile.zip");
+
+		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
+		repo.setEntityTypeFactory(entityTypeFactory);
+		repo.setAttributeFactory(attrMetaFactory);
+		assertNotNull(repo.getRepository("testData"));
+
+	}
+
+	@Test
+	public void testIteratorFromZipFileWithFolder() throws IOException
+	{
+		File zipFile = createTmpFileForResource("zipFileWithFolder.zip");
+
+		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
+		repo.setEntityTypeFactory(entityTypeFactory);
+		repo.setAttributeFactory(attrMetaFactory);
+		assertNotNull(repo.getRepository("testData"));
+
+	}
+
+	@Test
+	public void testIteratorFromZipFileWithBom() throws IOException
+	{
+		File zipFile = createTmpFileForResource("zipFileWithBom.zip");
+
+		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
+		repo.setEntityTypeFactory(entityTypeFactory);
+		repo.setAttributeFactory(attrMetaFactory);
+		assertNotNull(repo.getRepository("testDataWithBom"));
+	}
+
+	@Test
+	public void testIteratorFromZipFileWithFolderWithBom() throws IOException
+	{
+		File zipFile = createTmpFileForResource("zipFileWithFolderWithBom.zip");
+
+		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
+		repo.setEntityTypeFactory(entityTypeFactory);
+		repo.setAttributeFactory(attrMetaFactory);
+		assertNotNull(repo.getRepository("testDataWithBom"));
+	}
+
+	private File createTmpFileForResource(String fileName) throws IOException
+	{
+		InputStream in = getClass().getResourceAsStream("/" + fileName);
+		File csvFile = new File(FileUtils.getTempDirectory(), fileName);
+		FileCopyUtils.copy(in, new FileOutputStream(csvFile));
+		return csvFile;
+	}
+
 }

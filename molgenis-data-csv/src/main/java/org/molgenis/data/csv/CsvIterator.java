@@ -1,21 +1,29 @@
 package org.molgenis.data.csv;
 
 import org.molgenis.data.Entity;
-import org.molgenis.data.csv.services.CsvService;
-import org.molgenis.data.csv.services.CsvServiceImpl;
+import org.molgenis.data.csv.service.CsvService;
+import org.molgenis.data.csv.service.CsvServiceImpl;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.data.processor.AbstractCellProcessor;
 import org.molgenis.data.processor.CellProcessor;
 import org.molgenis.data.support.DynamicEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
 
+/**
+ * <p>The CSV Iterator handles single CSV-files. No ZIP-files. It is a low level iterator that handles single files only.</p>
+ */
 public class CsvIterator implements Iterator<Entity>
 {
+
+	private Logger LOG = LoggerFactory.getLogger(CsvIterator.class);
+
 	private final EntityType entityType;
 	private final List<CellProcessor> cellProcessors;
-	private final Map<String, Integer> colNamesMap; // column names index
+	private Map<String, Integer> colNamesMap; // column names index
 	private Entity next;
 
 	private Iterator<String[]> csvIterator = null;
@@ -31,11 +39,10 @@ public class CsvIterator implements Iterator<Entity>
 	{
 		this.cellProcessors = cellProcessors;
 		this.entityType = entityType;
-
-		List<String[]> content = csvService.buildLinesFromFile(file, separator);
-		colNamesMap = toColNamesMap(content.get(0));
-		content.remove(0);  // remove header row
-		csvIterator = content.iterator();
+		Map<String, List<String[]>> content = csvService.buildLinesFromFile(file, repositoryName, separator);
+		colNamesMap = toColNamesMap(content.get(repositoryName).get(0));
+		content.get(repositoryName).remove(0);  // remove header row
+		csvIterator = content.get(repositoryName).iterator();
 	}
 
 	Map<String, Integer> getColNamesMap()

@@ -1,12 +1,14 @@
-package org.molgenis.data.csv.services;
+package org.molgenis.data.csv.service;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public interface CsvService
 {
 
 	Character DEFAULT_CSV_SEPARATOR = ',';
+	String ILLEGAL_CHARACTER_REGEX = "[^a-zA-Z0-9_#]+";
 
 	/**
 	 * Creates a List with String[] containing the lines of a CSV file
@@ -16,7 +18,13 @@ public interface CsvService
 	 *
 	 * @param file can be a zip or a regular file
 	 */
-	List<String[]> buildLinesFromFile(File file);
+	Map<String, List<String[]>> buildLinesFromFile(File file);
+
+	/**
+	 * @param file
+	 * @return
+	 */
+	Map<String, List<String[]>> buildLinesFromFile(File file, String repositoryName);
 
 	/**
 	 * Just like the buildLinesFromFile method but added a separator.
@@ -25,6 +33,8 @@ public interface CsvService
 	 * @param separator CSV separator
 	 * @return List of lines
 	 */
-	List<String[]> buildLinesFromFile(File file, Character separator);
+	Map<String, List<String[]>> buildLinesFromFile(File file, String repositoryName, Character separator);
+
+	String createValidIdFromFileName(String fileName);
 
 }

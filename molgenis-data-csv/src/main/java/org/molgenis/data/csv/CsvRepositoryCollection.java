@@ -1,11 +1,11 @@
 package org.molgenis.data.csv;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
-import org.molgenis.data.MolgenisInvalidFormatException;
 import org.molgenis.data.Repository;
+import org.molgenis.data.csv.service.CsvService;
+import org.molgenis.data.csv.service.CsvServiceImpl;
 import org.molgenis.data.csv.utils.CsvFileExtensions;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
@@ -17,11 +17,11 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+
+import static java.lang.String.format;
+import static org.molgenis.util.file.ZipFileUtil.unzip;
 
 /**
  * Reads csv and tsv files. Can be bundled together in a zipfile.
@@ -32,20 +32,21 @@ import java.util.zip.ZipFile;
 public class CsvRepositoryCollection extends FileRepositoryCollection
 {
 	public static final String NAME = "CSV";
-	static final String MAC_ZIP = "__MACOSX";
+	public static final String MAC_ZIP = "__MACOSX";
 	private final File file;
 	private EntityTypeFactory entityTypeFactory;
 	private AttributeFactory attrMetaFactory;
 	private List<String> entityTypeIds;
 	private List<String> entityTypeIdsLowerCase;
 
-	public CsvRepositoryCollection(File file) throws MolgenisInvalidFormatException, IOException
+	private CsvService csvService = new CsvServiceImpl();
+
+	public CsvRepositoryCollection(File file)
 	{
 		this(file, (CellProcessor[]) null);
 	}
 
 	public CsvRepositoryCollection(File file, CellProcessor... cellProcessors)
-			throws MolgenisInvalidFormatException, IOException
 	{
 		super(CsvFileExtensions.getCSV(), cellProcessors);
 		this.file = file;
@@ -82,44 +83,33 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 		entityTypeIds = Lists.newArrayList();
 		entityTypeIdsLowerCase = Lists.newArrayList();
 
-		if (extension.equalsIgnoreCase("zip"))
+		if (extension.equalsIgnoreCase(CsvFileExtensions.ZIP.toString()))
 		{
-			ZipFile zipFile = null;
 			try
 			{
-				zipFile = new ZipFile(file);
-
-				for (Enumeration<? extends ZipEntry> e = zipFile.entries(); e.hasMoreElements(); )
+				unzip(file).forEach(zipEntry ->
 				{
-					ZipEntry entry = e.nextElement();
-					if (!entry.getName().contains(MAC_ZIP) && !entry.isDirectory())
+					if (!zipEntry.getName().contains(MAC_ZIP) && !zipEntry.isDirectory())
 					{
-						String name = getRepositoryName(entry.getName());
+						String name = csvService.createValidIdFromFileName(zipEntry.getName());
 						entityTypeIds.add(name);
 						entityTypeIdsLowerCase.add(name.toLowerCase());
 					}
-				}
+				});
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
-				throw new MolgenisDataException(e);
+				throw new MolgenisDataException(format("No file found [%s]", file.getName()));
 			}
-			finally
-			{
-				IOUtils.closeQuietly(zipFile);
-			}
+
 		}
 		else
 		{
-			String name = getRepositoryName(file.getName());
+			String name = csvService.createValidIdFromFileName(file.getName());
 			entityTypeIds.add(name);
 			entityTypeIdsLowerCase.add(name.toLowerCase());
 		}
-	}
 
-	private static String getRepositoryName(String fileName)
-	{
-		return StringUtils.stripFilenameExtension(StringUtils.getFilename(fileName));
 	}
 
 	@Override

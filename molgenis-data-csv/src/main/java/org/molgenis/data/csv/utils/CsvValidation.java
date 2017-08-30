@@ -44,9 +44,7 @@ public class CsvValidation
 	public static boolean validateCsvFileExtensions(String fileExtension)
 	{
 		boolean isValidExtension = false;
-		if (fileExtension.equals(CsvFileExtensions.ZIP.toString()) || fileExtension.equals(
-				CsvFileExtensions.TSV.toString()) || fileExtension.equals(CsvFileExtensions.CSV.toString())
-				|| fileExtension.equals(CsvFileExtensions.TXT.toString()))
+		if (CsvFileExtensions.getCSV().contains(fileExtension))
 		{
 			isValidExtension = true;
 		}

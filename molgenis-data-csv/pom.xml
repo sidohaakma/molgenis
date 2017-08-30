@@ -10,6 +10,10 @@
 
     <name>data-csv</name>
 
+    <properties>
+        <opencsv.version>4.0</opencsv.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.molgenis</groupId>
@@ -35,7 +39,7 @@
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
-            <version>4.0</version>
+            <version>${opencsv.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
