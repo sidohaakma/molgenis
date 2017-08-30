@@ -6,11 +6,13 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.util.LocaleUtil;
 import org.molgenis.data.MolgenisDataException;
-import org.molgenis.data.csv.services.CsvService;
 import org.molgenis.data.meta.AttributeType;
 import org.molgenis.oneclickimporter.model.Column;
 import org.molgenis.oneclickimporter.model.DataCollection;
 import org.molgenis.oneclickimporter.service.OneClickImporterService;
+import org.molgenis.util.MolgenisDateFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -24,7 +26,6 @@ import static com.google.common.collect.Lists.newLinkedList;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.time.ZoneOffset.UTC;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import static org.apache.commons.lang3.math.NumberUtils.isNumber;
 import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted;
 import static org.apache.poi.util.LocaleUtil.resetUserTimeZone;
@@ -33,14 +34,11 @@ import static org.apache.poi.util.LocaleUtil.setUserTimeZone;
 @Component
 public class OneClickImporterServiceImpl implements OneClickImporterService
 {
-	private final CsvService csvService;
 
-	public OneClickImporterServiceImpl(CsvService csvService)
-	{
-		this.csvService = Objects.requireNonNull(csvService);
-	}
+	private final Logger LOG = LoggerFactory.getLogger(OneClickImporterServiceImpl.class);
 
 	@Override
+
 	public List<DataCollection> buildDataCollectionsFromExcel(List<Sheet> sheets)
 	{
 		List<DataCollection> dataCollections = newArrayList();
@@ -102,7 +100,7 @@ public class OneClickImporterServiceImpl implements OneClickImporterService
 			case DATE:
 				if (!(value instanceof LocalDate))
 				{
-					castedValue = LocalDate.parse(value.toString(), ISO_LOCAL_DATE_TIME);
+					castedValue = MolgenisDateFormat.parseLocalDate(value.toString());
 				}
 				break;
 			case INT:

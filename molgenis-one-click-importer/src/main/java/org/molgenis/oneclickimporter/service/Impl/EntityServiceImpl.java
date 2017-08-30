@@ -86,10 +86,14 @@ public class EntityServiceImpl implements EntityService
 		Column firstColumn = columns.get(0);
 		final boolean isFirstColumnUnique = oneClickImporterService.hasUniqueValues(firstColumn);
 
-		AttributeType type = attributeTypeService.guessAttributeType(firstColumn.getDataValues());
-		final boolean isValidAttributeType = getValidIdAttributeTypes().contains(type);
+		// When there us no data in the sheet you must check on empty datavalues
+		boolean isValidAttributeType = false;
+		if (!firstColumn.getDataValues().isEmpty())
+		{
+			AttributeType type = attributeTypeService.guessAttributeType(firstColumn.getDataValues());
+			isValidAttributeType = getValidIdAttributeTypes().contains(type);
+		}
 		final boolean useAutoId = !isFirstColumnUnique || !isValidAttributeType;
-
 		Attribute idAttribute = useAutoId ? createIdAttribute() : createAttribute(firstColumn);
 		entityType.addAttribute(idAttribute, ROLE_ID);
 

@@ -6,7 +6,7 @@ import org.molgenis.data.DatabaseAction;
 import org.molgenis.data.FileRepositoryCollectionFactory;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.RepositoryCollection;
-import org.molgenis.data.excel.ExcelUtils;
+import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.importer.EntityImportReport;
 import org.molgenis.data.importer.ImportService;
 import org.molgenis.data.importer.ImportServiceFactory;
@@ -30,16 +30,18 @@ public class AmazonBucketIngester
 	private final FileMetaFactory fileMetaFactory;
 	private final FileStore fileStore;
 	private final AmazonBucketClient amazonBucketClient;
+	private final ExcelService excelService;
 
 	public AmazonBucketIngester(ImportServiceFactory importServiceFactory,
 			FileRepositoryCollectionFactory fileRepositoryCollectionFactory, FileMetaFactory fileMetaFactory,
-			FileStore fileStore, AmazonBucketClient amazonBucketClient)
+			FileStore fileStore, AmazonBucketClient amazonBucketClient, ExcelService excelService)
 	{
 		this.importServiceFactory = requireNonNull(importServiceFactory);
 		this.fileRepositoryCollectionFactory = requireNonNull(fileRepositoryCollectionFactory);
 		this.fileMetaFactory = requireNonNull(fileMetaFactory);
 		this.fileStore = requireNonNull(fileStore);
 		this.amazonBucketClient = requireNonNull(amazonBucketClient);
+		this.excelService = requireNonNull(excelService);
 	}
 
 	public FileMeta ingest(String jobExecutionID, String targetEntityTypeName, String bucket, String key,
@@ -55,11 +57,11 @@ public class AmazonBucketIngester
 			progress.progress(1, "downloading...");
 			File file = amazonBucketClient.downloadFile(client, fileStore, jobExecutionID, bucket, key, extension,
 					isExpression, targetEntityTypeName);
-			if (targetEntityTypeName != null && ExcelUtils.isExcelFile(file.getName()))
+			if (targetEntityTypeName != null && excelService.isExcelFile(file.getName()))
 			{
-				if (ExcelUtils.getNumberOfSheets(file) == 1)
+				if (excelService.getNumberOfSheets(file) == 1)
 				{
-					ExcelUtils.renameSheet(targetEntityTypeName, file, 0);
+					excelService.renameSheet(targetEntityTypeName, file, 0);
 				}
 				else
 				{

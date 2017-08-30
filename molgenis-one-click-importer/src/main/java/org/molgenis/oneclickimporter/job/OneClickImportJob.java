@@ -1,26 +1,24 @@
 package org.molgenis.oneclickimporter.job;
 
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.molgenis.data.csv.services.CsvService;
+import org.molgenis.data.csv.service.CsvService;
 import org.molgenis.data.csv.utils.CsvFileExtensions;
-import org.molgenis.data.excel.ExcelFileExtensions;
+import org.molgenis.data.excel.service.ExcelService;
+import org.molgenis.data.excel.utils.ExcelFileExtensions;
 import org.molgenis.data.jobs.Progress;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.file.FileStore;
-import org.molgenis.oneclickimporter.exceptions.EmptySheetException;
 import org.molgenis.oneclickimporter.exceptions.UnknownFileTypeException;
 import org.molgenis.oneclickimporter.model.DataCollection;
 import org.molgenis.oneclickimporter.service.EntityService;
-import org.molgenis.oneclickimporter.service.ExcelService;
 import org.molgenis.oneclickimporter.service.OneClickImporterNamingService;
 import org.molgenis.oneclickimporter.service.OneClickImporterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
@@ -51,11 +49,12 @@ public class OneClickImportJob
 	}
 
 	@Transactional
-	public List<EntityType> getEntityType(Progress progress, String filename)
-			throws UnknownFileTypeException, IOException, InvalidFormatException, EmptySheetException
+	public List<EntityType> getEntityType(Progress progress, String filename) throws UnknownFileTypeException
 	{
 		File file = fileStore.getFile(filename);
-		String fileExtension = findExtensionFromPossibilities(filename, newHashSet("csv", "xlsx", "zip", "xls"));
+		String fileExtension = findExtensionFromPossibilities(filename,
+				newHashSet(CsvFileExtensions.CSV.toString(), ExcelFileExtensions.XLS.toString(),
+						ExcelFileExtensions.XLSX.toString(), CsvFileExtensions.ZIP.toString()));
 
 		progress.status("Preparing import");
 		List<DataCollection> dataCollections = newArrayList();
@@ -71,11 +70,14 @@ public class OneClickImportJob
 			List<Sheet> sheets = excelService.buildExcelSheetsFromFile(file);
 			dataCollections.addAll(oneClickImporterService.buildDataCollectionsFromExcel(sheets));
 		}
-		else if (fileExtension.equals(CsvFileExtensions.CSV) || fileExtension.equals(CsvFileExtensions.ZIP))
+		else if (fileExtension.equals(CsvFileExtensions.CSV.toString()) || fileExtension.equals(
+				CsvFileExtensions.ZIP.toString()))
 		{
-			List<String[]> lines = csvService.buildLinesFromFile(file);
-			dataCollections.add(oneClickImporterService.buildDataCollectionFromCsv(
-					oneClickImporterNamingService.createValidIdFromFileName(filename), lines));
+			Map<String, List<String[]>> linesOfMultipleFiles = csvService.buildLinesFromFile(file);
+			linesOfMultipleFiles.keySet()
+								.forEach(key -> dataCollections.add(
+										oneClickImporterService.buildDataCollectionFromCsv(key,
+												linesOfMultipleFiles.get(key))));
 		}
 
 		List<EntityType> entityTypes = newArrayList();

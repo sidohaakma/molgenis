@@ -7,6 +7,8 @@ import org.molgenis.amazon.bucket.meta.AmazonBucketJobExecution;
 import org.molgenis.auth.SecurityPackage;
 import org.molgenis.data.AbstractMolgenisSpringTest;
 import org.molgenis.data.FileRepositoryCollectionFactory;
+import org.molgenis.data.excel.service.ExcelService;
+import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.importer.EntityImportReport;
 import org.molgenis.data.importer.ImportService;
 import org.molgenis.data.importer.ImportServiceFactory;
@@ -88,7 +90,13 @@ public class AmazonBucketIngesterTest extends AbstractMolgenisSpringTest
 		public AmazonBucketIngester ingester()
 		{
 			return new AmazonBucketIngester(importServiceFactory(), fileRepositoryCollectionFactory(),
-					fileMetaFactory(), fileStore(), amazonBucketClient());
+					fileMetaFactory(), fileStore(), amazonBucketClient(), excelService());
+		}
+
+		@Bean
+		public ExcelService excelService()
+		{
+			return new ExcelServiceImpl();
 		}
 
 		@Bean

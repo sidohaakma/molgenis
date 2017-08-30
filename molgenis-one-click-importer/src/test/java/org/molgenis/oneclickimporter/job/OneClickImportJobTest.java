@@ -3,15 +3,16 @@ package org.molgenis.oneclickimporter.job;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.mockito.Mock;
-import org.molgenis.data.csv.services.CsvService;
+import org.molgenis.data.MolgenisDataException;
+import org.molgenis.data.csv.service.CsvService;
+import org.molgenis.data.csv.service.CsvServiceImpl;
+import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.jobs.Progress;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.file.FileStore;
-import org.molgenis.oneclickimporter.exceptions.EmptySheetException;
 import org.molgenis.oneclickimporter.exceptions.UnknownFileTypeException;
 import org.molgenis.oneclickimporter.model.DataCollection;
 import org.molgenis.oneclickimporter.service.EntityService;
-import org.molgenis.oneclickimporter.service.ExcelService;
 import org.molgenis.oneclickimporter.service.OneClickImporterNamingService;
 import org.molgenis.oneclickimporter.service.OneClickImporterService;
 import org.testng.annotations.BeforeClass;
@@ -21,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.mockito.Mockito.*;
@@ -33,8 +36,7 @@ public class OneClickImportJobTest
 	@Mock
 	private ExcelService excelService;
 
-	@Mock
-	private CsvService csvService;
+	private CsvService csvService = new CsvServiceImpl();
 
 	@Mock
 	private OneClickImporterService oneClickImporterService;
@@ -58,8 +60,7 @@ public class OneClickImportJobTest
 
 	@Test
 	public void testGetEntityTypeWithExcel()
-			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException,
-			EmptySheetException
+			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException
 	{
 		Progress progress = mock(Progress.class);
 		String filename = "simple-valid.xlsx";
@@ -93,24 +94,22 @@ public class OneClickImportJobTest
 
 	@Test
 	public void testGetEntityTypeWithCsv()
-			throws UnknownFileTypeException, InvalidFormatException, IOException, URISyntaxException,
-			EmptySheetException
+			throws UnknownFileTypeException, InvalidFormatException, IOException, URISyntaxException
 	{
 		Progress progress = mock(Progress.class);
-		String filename = "simple-valid.csv";
+		String filename = "/simple-valid.csv";
 
 		when(oneClickImporterNamingService.createValidIdFromFileName(filename)).thenReturn("simple_valid");
 
-		File file = loadFile(OneClickImportJobTest.class, "/" + filename);
+		File file = loadFile(OneClickImportJobTest.class, filename);
 		when(fileStore.getFile(filename)).thenReturn(file);
 
-		List<String[]> lines = new ArrayList<>();
-		lines.add(new String[] { "name,age", "piet,25" });
-		when(csvService.buildLinesFromFile(file)).thenReturn(lines);
+		Map<String, List<String[]>> content = csvService.buildLinesFromFile(file);
 
 		DataCollection dataCollection = mock(DataCollection.class);
-		when(dataCollection.getName()).thenReturn("file_1");
-		when(oneClickImporterService.buildDataCollectionFromCsv("simple_valid", lines)).thenReturn(dataCollection);
+		when(dataCollection.getName()).thenReturn("simple_valid");
+		when(oneClickImporterService.buildDataCollectionFromCsv("simple_valid",
+				content.get("simple_valid"))).thenReturn(dataCollection);
 
 		EntityType entityType = mock(EntityType.class);
 		when(entityService.createEntityType(dataCollection, "simple_valid")).thenReturn(entityType);
@@ -121,16 +120,14 @@ public class OneClickImportJobTest
 		oneClickImporterJob.getEntityType(progress, filename);
 
 		verify(progress).status("Preparing import");
-		verify(csvService).buildLinesFromFile(file);
-		verify(oneClickImporterService).buildDataCollectionFromCsv("simple_valid", lines);
-		verify(progress).status("Importing [file_1] into package [simple_valid]");
+		verify(oneClickImporterService).buildDataCollectionFromCsv("simple_valid", content.get("simple_valid"));
+		verify(progress).status("Importing [simple_valid] into package [simple_valid]");
 		verify(entityService).createEntityType(dataCollection, "simple_valid");
 	}
 
 	@Test
 	public void testGetEntityTypeWithZip()
-			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException,
-			EmptySheetException
+			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException
 	{
 		Progress progress = mock(Progress.class);
 		String filename = "simple-valid.zip";
@@ -152,21 +149,29 @@ public class OneClickImportJobTest
 		File zipFile4 = loadFile(OneClickImportJobTest.class, "/zip_file_4.csv");
 		when(oneClickImporterNamingService.createValidIdFromFileName("zip_file_4.csv")).thenReturn("zip_file_4");
 
+		Map<String, List<String[]>> csvContent1 = new HashMap<>();
 		List<String[]> lines1 = new ArrayList<>();
 		lines1.add(new String[] { "name,age", "piet,25" });
-		when(csvService.buildLinesFromFile(zipFile1)).thenReturn(lines1);
+		csvContent1.put("zip_file_1", lines1);
+		when(csvService.buildLinesFromFile(zipFile1)).thenReturn(csvContent1);
 
+		Map<String, List<String[]>> csvContent2 = new HashMap<>();
 		List<String[]> lines2 = new ArrayList<>();
 		lines2.add(new String[] { "name,age", "klaas,30" });
-		when(csvService.buildLinesFromFile(zipFile2)).thenReturn(lines2);
+		csvContent2.put("zip_file_2", lines2);
+		when(csvService.buildLinesFromFile(zipFile2)).thenReturn(csvContent2);
 
+		Map<String, List<String[]>> csvContent3 = new HashMap<>();
 		List<String[]> lines3 = new ArrayList<>();
 		lines3.add(new String[] { "name,age", "Jan,35" });
-		when(csvService.buildLinesFromFile(zipFile3)).thenReturn(lines3);
+		csvContent3.put("zip_file_3", lines3);
+		when(csvService.buildLinesFromFile(zipFile3)).thenReturn(csvContent3);
 
+		Map<String, List<String[]>> csvContent4 = new HashMap<>();
 		List<String[]> lines4 = new ArrayList<>();
 		lines4.add(new String[] { "name,age", "Henk,40" });
-		when(csvService.buildLinesFromFile(zipFile4)).thenReturn(lines4);
+		csvContent4.put("zip_file_4", lines4);
+		when(csvService.buildLinesFromFile(zipFile4)).thenReturn(csvContent4);
 
 		DataCollection dataCollection1 = mock(DataCollection.class);
 		when(dataCollection1.getName()).thenReturn("zip_file_1");
@@ -227,10 +232,9 @@ public class OneClickImportJobTest
 		verify(entityService).createEntityType(dataCollection4, "simple_valid");
 	}
 
-	@Test(expectedExceptions = UnknownFileTypeException.class, expectedExceptionsMessageRegExp = "Zip file contains files which are not of type CSV")
+	@Test(expectedExceptions = MolgenisDataException.class)
 	public void testInvalidZipContent()
-			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException,
-			EmptySheetException
+			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException
 	{
 		Progress progress = mock(Progress.class);
 		String filename = "unsupported-file-zip.zip";
@@ -244,10 +248,9 @@ public class OneClickImportJobTest
 		oneClickImporterJob.getEntityType(progress, filename);
 	}
 
-	@Test(expectedExceptions = UnknownFileTypeException.class, expectedExceptionsMessageRegExp = "Zip file contains files which are not of type CSV")
+	@Test(expectedExceptions = MolgenisDataException.class)
 	public void testInvalidZipContentWithImage()
-			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException,
-			EmptySheetException
+			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException
 	{
 		Progress progress = mock(Progress.class);
 		String filename = "unsupported-file-zip2.zip";
@@ -263,8 +266,7 @@ public class OneClickImportJobTest
 
 	@Test(expectedExceptions = UnknownFileTypeException.class, expectedExceptionsMessageRegExp = "File \\[unsupported-file-type.nft\\] does not have a valid extension, supported: \\[csv, xlsx, zip, xls\\]")
 	public void testInvalidFileType()
-			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException,
-			EmptySheetException
+			throws InvalidFormatException, IOException, URISyntaxException, UnknownFileTypeException
 	{
 		Progress progress = mock(Progress.class);
 		String filename = "unsupported-file-type.nft";

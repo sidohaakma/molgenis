@@ -21,35 +21,38 @@ public class AttributeTypeServiceImpl implements AttributeTypeService
 		int rowCount = dataValues.size();
 		int currentRowIndex = 0;
 
-		AttributeType currentGuess = getBasicAttributeType(dataValues.get(0));
-		currentGuess = getEnrichedType(currentGuess, dataValues.get(currentRowIndex));
-		while (currentRowIndex < rowCount && !guessCompleted)
+		AttributeType currentGuess = null;
+		if (!dataValues.isEmpty())
 		{
-			Object value = dataValues.get(currentRowIndex);
-			AttributeType basicType = getBasicAttributeType(value);
-
-			AttributeType basicTypeGuess = getCommonType(currentGuess, basicType);
-			AttributeType enrichedTypeGuess = getEnrichedType(basicTypeGuess, value);
-
-			// If the newly found type is not narrower than the current type, do not update
-			// e.g. a long does not fit into an integer
-			if (isBroader(enrichedTypeGuess, currentGuess))
+			currentGuess = getBasicAttributeType(dataValues.get(0));
+			currentGuess = getEnrichedType(currentGuess, dataValues.get(currentRowIndex));
+			while (currentRowIndex < rowCount && !guessCompleted)
 			{
-				currentGuess = enrichedTypeGuess;
-			}
+				Object value = dataValues.get(currentRowIndex);
+				AttributeType basicType = getBasicAttributeType(value);
 
-			// If a guess is TEXT, there is no other type option suitable
-			if (TEXT.equals(currentGuess))
-			{
-				guessCompleted = true;
-			}
+				AttributeType basicTypeGuess = getCommonType(currentGuess, basicType);
+				AttributeType enrichedTypeGuess = getEnrichedType(basicTypeGuess, value);
 
-			currentRowIndex++;
+				// If the newly found type is not narrower than the current type, do not update
+				// e.g. a long does not fit into an integer
+				if (isBroader(enrichedTypeGuess, currentGuess))
+				{
+					currentGuess = enrichedTypeGuess;
+				}
+
+				// If a guess is TEXT, there is no other type option suitable
+				if (TEXT.equals(currentGuess))
+				{
+					guessCompleted = true;
+				}
+
+				currentRowIndex++;
+			}
 		}
-
 		if (currentGuess == null)
 		{
-			currentGuess = STRING;
+			currentGuess = AttributeType.STRING;
 		}
 		return currentGuess;
 	}
@@ -59,6 +62,7 @@ public class AttributeTypeServiceImpl implements AttributeTypeService
 	 *
 	 * @return
 	 */
+
 	private boolean isBroader(AttributeType enrichedTypeGuess, AttributeType columnTypeGuess)
 	{
 		if (columnTypeGuess == null && enrichedTypeGuess != null || columnTypeGuess == null)

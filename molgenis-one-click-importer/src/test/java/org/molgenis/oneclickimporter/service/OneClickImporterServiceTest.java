@@ -3,25 +3,27 @@ package org.molgenis.oneclickimporter.service;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.mockito.Mock;
-import org.molgenis.data.csv.services.CsvService;
+import org.molgenis.data.csv.service.CsvService;
+import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.meta.AttributeType;
-import org.molgenis.oneclickimporter.exceptions.EmptySheetException;
 import org.molgenis.oneclickimporter.model.Column;
 import org.molgenis.oneclickimporter.model.DataCollection;
 import org.molgenis.oneclickimporter.service.Impl.OneClickImporterServiceImpl;
+import org.molgenis.util.ResourceUtils;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.molgenis.data.meta.AttributeType.*;
-import static org.molgenis.oneclickimporter.service.utils.OneClickImporterTestUtils.loadLinesFromFile;
 import static org.molgenis.oneclickimporter.service.utils.OneClickImporterTestUtils.loadSheetFromFile;
 import static org.testng.Assert.*;
 
@@ -29,18 +31,21 @@ public class OneClickImporterServiceTest
 {
 	@Mock
 	private CsvService csvService;
+	@Mock
+	private ExcelService excelService;
+
 	private OneClickImporterService oneClickImporterService;
 
 	@BeforeClass
 	public void beforeClass()
 	{
 		initMocks(this);
-		oneClickImporterService = new OneClickImporterServiceImpl(csvService);
+		oneClickImporterService = new OneClickImporterServiceImpl();
 	}
 
 	@Test
 	public void testBuildDataCollectionWithSimpleValidExcelFile()
-			throws IOException, InvalidFormatException, URISyntaxException, EmptySheetException
+			throws IOException, InvalidFormatException, URISyntaxException
 	{
 		List<Sheet> sheets = loadSheetFromFile(OneClickImporterServiceTest.class, "/simple-valid.xlsx");
 		DataCollection actual = oneClickImporterService.buildDataCollectionsFromExcel(sheets).get(0);
@@ -55,10 +60,9 @@ public class OneClickImporterServiceTest
 	}
 
 	@Test
-	public void testBuildDataSheetWithValidFormulaFile()
-			throws IOException, InvalidFormatException, URISyntaxException, EmptySheetException
+	public void testBuildDataSheetWithValidFormulaFile() throws IOException, InvalidFormatException, URISyntaxException
 	{
-		List<Sheet> sheets = loadSheetFromFile(OneClickImporterServiceTest.class, "/valid-with-formula.xlsx");
+		List<Sheet> sheets = excelService.buildExcelSheetsFromFile(new File("/valid-with-formula.xlsx"));
 		DataCollection actual = oneClickImporterService.buildDataCollectionsFromExcel(sheets).get(0);
 
 		Column c1 = Column.create("name", 0, newArrayList("Mark", "Mariska"));
@@ -71,9 +75,10 @@ public class OneClickImporterServiceTest
 
 	@Test
 	public void testBuildDataSheetBuildsColumnsOfEqualLength()
-			throws IOException, InvalidFormatException, URISyntaxException, EmptySheetException
+			throws IOException, InvalidFormatException, URISyntaxException
 	{
-		List<Sheet> sheets = loadSheetFromFile(OneClickImporterServiceTest.class, "/valid-with-blank-values.xlsx");
+		List<Sheet> sheets = excelService.buildExcelSheetsFromFile(
+				ResourceUtils.getFile(getClass(), "/valid-with-blank-values.xlsx"));
 		DataCollection actual = oneClickImporterService.buildDataCollectionsFromExcel(sheets).get(0);
 
 		Column c1 = Column.create("name", 0, newArrayList("Mark", "Bart", "Tommy", "Sido", "Connor", null));
@@ -88,10 +93,10 @@ public class OneClickImporterServiceTest
 	}
 
 	@Test
-	public void testBuildDataSheetWithComplexFile()
-			throws IOException, InvalidFormatException, URISyntaxException, EmptySheetException
+	public void testBuildDataSheetWithComplexFile() throws IOException, InvalidFormatException, URISyntaxException
 	{
-		List<Sheet> sheets = loadSheetFromFile(OneClickImporterServiceTest.class, "/complex-valid.xlsx");
+		List<Sheet> sheets = excelService.buildExcelSheetsFromFile(
+				ResourceUtils.getFile(getClass(), "/complex-valid.xlsx"));
 		DataCollection actual = oneClickImporterService.buildDataCollectionsFromExcel(sheets).get(0);
 
 		Column c1 = Column.create("first name", 0,
@@ -111,10 +116,10 @@ public class OneClickImporterServiceTest
 	}
 
 	@Test
-	public void testBuildDataSheetWithDates()
-			throws IOException, InvalidFormatException, URISyntaxException, EmptySheetException
+	public void testBuildDataSheetWithDates() throws IOException, InvalidFormatException, URISyntaxException
 	{
-		List<Sheet> sheets = loadSheetFromFile(OneClickImporterServiceTest.class, "/valid-with-dates.xlsx");
+		List<Sheet> sheets = excelService.buildExcelSheetsFromFile(
+				ResourceUtils.getFile(getClass(), "/valid-with-dates.xlsx"));
 		DataCollection actual = oneClickImporterService.buildDataCollectionsFromExcel(sheets).get(0);
 
 		Column c1 = Column.create("dates", 0,
@@ -131,42 +136,47 @@ public class OneClickImporterServiceTest
 	@Test
 	public void testBuildDataCollectionWithSimpleValidCsvFile() throws IOException, URISyntaxException
 	{
+		Map<String, List<String[]>> csvContent = csvService.buildLinesFromFile(
+				ResourceUtils.getFile(getClass(), "/simple-valid.csv"));
 
-		oneClickImporterService = new OneClickImporterServiceImpl(csvService);
+		csvContent.forEach((key, list) ->
+		{
+			DataCollection actual = oneClickImporterService.buildDataCollectionFromCsv(key, list);
+			Column c1 = Column.create("name", 0, newArrayList("Mark", "Connor", "Fleur", "Dennis"));
+			Column c2 = Column.create("superpower", 1,
+					newArrayList("arrow functions", "Oldschool syntax", "Lambda Magician", "Root access"));
 
-		List<String[]> lines = loadLinesFromFile(OneClickImporterServiceTest.class, "/simple-valid.csv");
-		DataCollection actual = oneClickImporterService.buildDataCollectionFromCsv("simple-valid", lines);
+			DataCollection expected = DataCollection.create("simple-valid", newArrayList(c1, c2));
+			assertEquals(actual, expected);
+		});
 
-		Column c1 = Column.create("name", 0, newArrayList("Mark", "Connor", "Fleur", "Dennis"));
-		Column c2 = Column.create("superpower", 1,
-				newArrayList("arrow functions", "Oldschool syntax", "Lambda Magician", "Root access"));
-
-		DataCollection expected = DataCollection.create("simple-valid", newArrayList(c1, c2));
-		assertEquals(actual, expected);
 	}
 
 	@Test
 	public void testBuildDataCollectionWithComplexValidCsvFile() throws IOException, URISyntaxException
 	{
-		oneClickImporterService = new OneClickImporterServiceImpl(csvService);
+		Map<String, List<String[]>> csvMaps = csvService.buildLinesFromFile(
+				ResourceUtils.getFile(getClass(), "/complex-valid.csv"));
 
-		List<String[]> lines = loadLinesFromFile(OneClickImporterServiceTest.class, "/complex-valid.csv");
-		DataCollection actual = oneClickImporterService.buildDataCollectionFromCsv("complex-valid", lines);
+		csvMaps.forEach((key, list) ->
+		{
+			DataCollection actual = oneClickImporterService.buildDataCollectionFromCsv(key, list);
+			Column c1 = Column.create("first name", 0,
+					newArrayList("Mark", "Fleur", "Dennis", "Bart", "Sido", "Mariska", "Tommy", "Connor", "Piet",
+							"Jan"));
+			Column c2 = Column.create("last name", 1,
+					newArrayList("de Haan", "Kelpin", "Hendriksen", "Charbon", "Haakma", "Slofstra", "de Boer",
+							"Stroomberg", "Klaassen", null));
+			Column c3 = Column.create("full name", 2,
+					newArrayList("Mark de Haan", "Fleur Kelpin", "Dennis Hendriksen", "Bart Charbon", "Sido Haakma",
+							"Mariska Slofstra", "Tommy de Boer", "Connor Stroomberg", "Piet Klaassen", null));
+			Column c4 = Column.create("UMCG employee", 3,
+					newArrayList(true, true, true, true, true, true, true, true, false, false));
+			Column c5 = Column.create("Age", 4, newArrayList(26, null, null, null, null, 22, 27, null, 53, 32));
 
-		Column c1 = Column.create("first name", 0,
-				newArrayList("Mark", "Fleur", "Dennis", "Bart", "Sido", "Mariska", "Tommy", "Connor", "Piet", "Jan"));
-		Column c2 = Column.create("last name", 1,
-				newArrayList("de Haan", "Kelpin", "Hendriksen", "Charbon", "Haakma", "Slofstra", "de Boer",
-						"Stroomberg", "Klaassen", null));
-		Column c3 = Column.create("full name", 2,
-				newArrayList("Mark de Haan", "Fleur Kelpin", "Dennis Hendriksen", "Bart Charbon", "Sido Haakma",
-						"Mariska Slofstra", "Tommy de Boer", "Connor Stroomberg", "Piet Klaassen", null));
-		Column c4 = Column.create("UMCG employee", 3,
-				newArrayList(true, true, true, true, true, true, true, true, false, false));
-		Column c5 = Column.create("Age", 4, newArrayList(26, null, null, null, null, 22, 27, null, 53, 32));
-
-		DataCollection expected = DataCollection.create("complex-valid", newArrayList(c1, c2, c3, c4, c5));
-		assertEquals(actual, expected);
+			DataCollection expected = DataCollection.create("complex-valid", newArrayList(c1, c2, c3, c4, c5));
+			assertEquals(actual, expected);
+		});
 	}
 
 	@Test

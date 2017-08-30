@@ -18,13 +18,13 @@ public interface CsvService
 	 *
 	 * @param file can be a zip or a regular file
 	 */
-	Map<String, List<String[]>> buildLinesFromFile(File file);
+	Map<String, List<String[]>> buildLinesFromFile(final File file);
 
 	/**
 	 * @param file
 	 * @return
 	 */
-	Map<String, List<String[]>> buildLinesFromFile(File file, String repositoryName);
+	Map<String, List<String[]>> buildLinesFromFile(final File file, final String repositoryName);
 
 	/**
 	 * Just like the buildLinesFromFile method but added a separator.
@@ -33,7 +33,7 @@ public interface CsvService
 	 * @param separator CSV separator
 	 * @return List of lines
 	 */
-	Map<String, List<String[]>> buildLinesFromFile(File file, String repositoryName, Character separator);
+	Map<String, List<String[]>> buildLinesFromFile(final File file, final String repositoryName, Character separator);
 
 	String createValidIdFromFileName(String fileName);
 
