@@ -33,7 +33,7 @@ public class AnnotationServiceImplTest extends AbstractMolgenisSpringTest
 	VcfAttributes vcfAttributes;
 
 	@Autowired
-	private AnnotationServiceImpl annotationService;
+	private AnnotationService annotationService;
 
 	@Test
 	public void getAllAnnotators()

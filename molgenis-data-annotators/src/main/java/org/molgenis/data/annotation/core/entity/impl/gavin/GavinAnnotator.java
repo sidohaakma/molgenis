@@ -19,6 +19,7 @@ import org.molgenis.data.annotation.core.resources.impl.SingleResourceConfig;
 import org.molgenis.data.annotation.core.resources.impl.emx.EmxResourceImpl;
 import org.molgenis.data.annotation.core.resources.impl.emx.InMemoryRepositoryFactory;
 import org.molgenis.data.annotation.core.utils.AnnotatorUtils;
+import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.importer.emx.EmxMetaDataParser;
 import org.molgenis.data.meta.EntityTypeDependencyResolver;
 import org.molgenis.data.meta.model.*;
@@ -86,6 +87,9 @@ public class GavinAnnotator implements AnnotatorConfig
 	private EntityTypeDependencyResolver entityTypeDependencyResolver;
 
 	@Autowired
+	private ExcelService excelService;
+
+	@Autowired
 	GeneNameQueryCreator geneNameQueryCreator;
 
 	@Bean
@@ -98,7 +102,7 @@ public class GavinAnnotator implements AnnotatorConfig
 			{
 				return new InMemoryRepositoryFactory(RESOURCE_ENTITY_NAME, RESOURCE,
 						new EmxMetaDataParser(packageFactory, attributeFactory, entityTypeFactory,
-								entityTypeDependencyResolver), entityTypeFactory, attributeFactory);
+								entityTypeDependencyResolver), excelService, entityTypeFactory, attributeFactory);
 			}
 		};
 	}

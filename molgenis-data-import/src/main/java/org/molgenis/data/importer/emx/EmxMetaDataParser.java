@@ -241,7 +241,8 @@ public class EmxMetaDataParser implements MetaDataParser
 					if (repoName == null) repoName = emxName;
 					metadataList.add(dataService.getRepository(repoName).getEntityType());
 				}
-				IntermediateParseResults intermediateResults = parseTagsSheet(source.getRepository(EMX_TAGS));
+
+				IntermediateParseResults intermediateResults = tryParseTags(source);
 				parsePackagesSheet(source.getRepository(EMX_PACKAGES), intermediateResults);
 
 				if (source.hasRepository(EMX_LANGUAGES))
@@ -322,7 +323,7 @@ public class EmxMetaDataParser implements MetaDataParser
 	{
 		// TODO: this task is actually a 'merge' instead of 'import'
 		// so we need to consider both new metadata and existing ...
-		IntermediateParseResults intermediateResults = parseTagsSheet(source.getRepository(EMX_TAGS));
+		IntermediateParseResults intermediateResults = tryParseTags(source);
 
 		parsePackagesSheet(source.getRepository(EMX_PACKAGES), intermediateResults);
 		parseEntitiesSheet(source.getRepository(EMX_ENTITIES), intermediateResults);
@@ -339,6 +340,20 @@ public class EmxMetaDataParser implements MetaDataParser
 
 		postProcessMetadata(intermediateResults);
 
+		return intermediateResults;
+	}
+
+	private IntermediateParseResults tryParseTags(RepositoryCollection source)
+	{
+		IntermediateParseResults intermediateResults = new IntermediateParseResults(entityTypeFactory, defaultPackage);
+		try
+		{
+			parseTagsSheet(intermediateResults, source.getRepository(EMX_TAGS));
+		}
+		catch (UnknownEntityException ignore)
+		{
+
+		}
 		return intermediateResults;
 	}
 
@@ -406,10 +421,8 @@ public class EmxMetaDataParser implements MetaDataParser
 	 * @param tagRepository the {@link Repository} that contains the tags entity
 	 * @return Map mapping tag Identifier to tag {@link Entity}, will be empty if no tags repository was found
 	 */
-	private IntermediateParseResults parseTagsSheet(Repository<Entity> tagRepository)
+	private void parseTagsSheet(IntermediateParseResults intermediateParseResults, Repository<Entity> tagRepository)
 	{
-		IntermediateParseResults intermediateParseResults = new IntermediateParseResults(entityTypeFactory,
-				defaultPackage);
 		if (tagRepository != null)
 		{
 			for (Entity tagEntity : tagRepository)
@@ -421,7 +434,6 @@ public class EmxMetaDataParser implements MetaDataParser
 				}
 			}
 		}
-		return intermediateParseResults;
 	}
 
 	/**
@@ -1301,7 +1313,7 @@ public class EmxMetaDataParser implements MetaDataParser
 		{
 			if (EMX_PACKAGES.equals(sheet))
 			{
-				IntermediateParseResults parseResult = parseTagsSheet(source.getRepository(EMX_TAGS));
+				IntermediateParseResults parseResult = tryParseTags(source);
 				parsePackagesSheet(source.getRepository(sheet), parseResult);
 				parseResult.getPackages().keySet().forEach(report::addPackage);
 			}

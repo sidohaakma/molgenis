@@ -5,6 +5,7 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.Repository;
 import org.molgenis.data.annotation.core.resources.impl.RepositoryFactory;
 import org.molgenis.data.excel.ExcelRepositoryCollection;
+import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.importer.MetaDataParser;
 import org.molgenis.data.mem.InMemoryRepository;
 import org.molgenis.data.meta.DefaultPackage;
@@ -25,6 +26,7 @@ public class InMemoryRepositoryFactory implements RepositoryFactory
 {
 	private final AttributeFactory attributeFactory;
 	private final EntityTypeFactory entityTypeFactory;
+	private final ExcelService excelService;
 
 	private final String id;
 	private final String name;
@@ -32,12 +34,13 @@ public class InMemoryRepositoryFactory implements RepositoryFactory
 	private ExcelRepositoryCollection repositoryCollection = null;
 	private final MetaDataParser parser;
 
-	public InMemoryRepositoryFactory(String entityId, String name, MetaDataParser parser,
+	public InMemoryRepositoryFactory(String entityId, String name, MetaDataParser parser, ExcelService excelService,
 			EntityTypeFactory entityTypeFactory, AttributeFactory attributeFactory)
 	{
 		this.id = entityId;
 		this.name = name;
 		this.parser = parser;
+		this.excelService = excelService;
 		this.attributeFactory = attributeFactory;
 		this.entityTypeFactory = entityTypeFactory;
 	}
@@ -48,8 +51,9 @@ public class InMemoryRepositoryFactory implements RepositoryFactory
 		try
 		{
 			repositoryCollection = new ExcelRepositoryCollection(file);
-			repositoryCollection.setAttributeFactory(attributeFactory);
 			repositoryCollection.setEntityTypeFactory(entityTypeFactory);
+			repositoryCollection.setAttributeFactory(attributeFactory);
+			repositoryCollection.setExcelService(excelService);
 		}
 		catch (Exception e)
 		{

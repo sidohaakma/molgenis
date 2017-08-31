@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -149,29 +148,21 @@ public class OneClickImportJobTest
 		File zipFile4 = loadFile(OneClickImportJobTest.class, "/zip_file_4.csv");
 		when(oneClickImporterNamingService.createValidIdFromFileName("zip_file_4.csv")).thenReturn("zip_file_4");
 
-		Map<String, List<String[]>> csvContent1 = new HashMap<>();
 		List<String[]> lines1 = new ArrayList<>();
 		lines1.add(new String[] { "name,age", "piet,25" });
-		csvContent1.put("zip_file_1", lines1);
-		when(csvService.buildLinesFromFile(zipFile1)).thenReturn(csvContent1);
+		when(csvService.buildLinesFromFile(zipFile1).get("zip_file_1")).thenReturn(lines1);
 
-		Map<String, List<String[]>> csvContent2 = new HashMap<>();
 		List<String[]> lines2 = new ArrayList<>();
 		lines2.add(new String[] { "name,age", "klaas,30" });
-		csvContent2.put("zip_file_2", lines2);
-		when(csvService.buildLinesFromFile(zipFile2)).thenReturn(csvContent2);
+		when(csvService.buildLinesFromFile(zipFile2).get("zip_file_2")).thenReturn(lines2);
 
-		Map<String, List<String[]>> csvContent3 = new HashMap<>();
 		List<String[]> lines3 = new ArrayList<>();
 		lines3.add(new String[] { "name,age", "Jan,35" });
-		csvContent3.put("zip_file_3", lines3);
-		when(csvService.buildLinesFromFile(zipFile3)).thenReturn(csvContent3);
+		when(csvService.buildLinesFromFile(zipFile3).get("zip_file_3")).thenReturn(lines3);
 
-		Map<String, List<String[]>> csvContent4 = new HashMap<>();
 		List<String[]> lines4 = new ArrayList<>();
 		lines4.add(new String[] { "name,age", "Henk,40" });
-		csvContent4.put("zip_file_4", lines4);
-		when(csvService.buildLinesFromFile(zipFile4)).thenReturn(csvContent4);
+		when(csvService.buildLinesFromFile(zipFile4).get("zip_file_4")).thenReturn(lines4);
 
 		DataCollection dataCollection1 = mock(DataCollection.class);
 		when(dataCollection1.getName()).thenReturn("zip_file_1");
@@ -207,16 +198,12 @@ public class OneClickImportJobTest
 		oneClickImporterJob.getEntityType(progress, filename);
 
 		verify(progress).status("Preparing import");
-		verify(csvService).buildLinesFromFile(zipFile1);
 		verify(oneClickImporterService).buildDataCollectionFromCsv("zip_file_1", lines1);
 
-		verify(csvService).buildLinesFromFile(zipFile2);
 		verify(oneClickImporterService).buildDataCollectionFromCsv("zip_file_2", lines2);
 
-		verify(csvService).buildLinesFromFile(zipFile3);
 		verify(oneClickImporterService).buildDataCollectionFromCsv("zip_file_3", lines3);
 
-		verify(csvService).buildLinesFromFile(zipFile4);
 		verify(oneClickImporterService).buildDataCollectionFromCsv("zip_file_4", lines4);
 
 		verify(progress).status("Importing [zip_file_1] into package [simple_valid]");

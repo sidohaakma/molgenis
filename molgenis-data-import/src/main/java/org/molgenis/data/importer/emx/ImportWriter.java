@@ -231,29 +231,41 @@ public class ImportWriter
 					name))
 			{
 				Repository<Entity> repository = dataService.getRepository(name);
-				Repository<Entity> emxEntityRepo = source.getRepository(entityType.getId());
-
-				// Try without default package
-				if ((emxEntityRepo == null) && (defaultPackage != null) && entityType.getId()
-																					 .toLowerCase()
-																					 .startsWith(
-																							 defaultPackage.toLowerCase()
-																									 + PACKAGE_SEPARATOR))
+				Repository<Entity> emxEntityRepo = null;
+				if (source.hasRepository(entityType.getId()))
 				{
-					emxEntityRepo = source.getRepository(entityType.getId().substring(defaultPackage.length() + 1));
+					emxEntityRepo = source.getRepository(entityType.getId());
+
+				}
+				else
+				{
+					// Try without default package
+					if ((defaultPackage != null) && entityType.getId()
+															  .toLowerCase()
+															  .startsWith(
+																	  defaultPackage.toLowerCase() + PACKAGE_SEPARATOR))
+					{
+						String repositoryId = entityType.getId().substring(defaultPackage.length() + 1);
+						if (source.hasRepository(repositoryId))
+						{
+							emxEntityRepo = source.getRepository(repositoryId);
+						}
+					}
+
+					// check to prevent nullpointer when importing metadata only
+					if (emxEntityRepo != null)
+					{
+						// transforms entities so that they match the entity meta data of the output repository
+						Iterable<Entity> entities = Iterables.transform(emxEntityRepo,
+								emxEntity -> toEntity(entityType, emxEntity));
+						int count = update(repository, entities, dbAction);
+						report.addEntityCount(name, count);
+					}
 				}
 
-				// check to prevent nullpointer when importing metadata only
-				if (emxEntityRepo != null)
-				{
-					// transforms entities so that they match the entity meta data of the output repository
-					Iterable<Entity> entities = Iterables.transform(emxEntityRepo,
-							emxEntity -> toEntity(entityType, emxEntity));
-					int count = update(repository, entities, dbAction);
-					report.addEntityCount(name, count);
-				}
 			}
 		}
+
 	}
 
 	/**
@@ -263,6 +275,7 @@ public class ImportWriter
 	 * @param emxEntity  EMX entity
 	 * @return MOLGENIS entity
 	 */
+
 	private Entity toEntity(EntityType entityType, Entity emxEntity)
 	{
 		Entity entity = entityManager.create(entityType, POPULATE);
