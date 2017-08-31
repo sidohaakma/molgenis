@@ -21,7 +21,7 @@ public class ExcelValidation
 		}
 		if (sheet.getPhysicalNumberOfRows() == 0)
 		{
-			throw new MolgenisDataException(format("Sheet [%s]is empty", sheet.getSheetName()));
+			throw new MolgenisDataException(format("Sheet [%s] is empty", sheet.getSheetName()));
 		}
 		if (sheet.getNumMergedRegions() > 0)
 		{

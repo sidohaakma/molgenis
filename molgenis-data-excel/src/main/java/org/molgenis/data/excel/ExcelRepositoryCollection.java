@@ -3,6 +3,7 @@ package org.molgenis.data.excel;
 import com.google.common.collect.Lists;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.molgenis.data.Entity;
+import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.excel.service.ExcelServiceImpl;
@@ -17,8 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import static java.lang.String.format;
 
 /**
  * Read an excel file and iterate through the sheets.
@@ -35,6 +39,7 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 
 	private List<String> entityTypeIds;
 	private List<String> entityTypeIdsLowerCase;
+	private List<Sheet> sheets = new ArrayList<>();
 
 	private ExcelService excelService = new ExcelServiceImpl();
 
@@ -47,7 +52,7 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	{
 		super(ExcelFileExtensions.getExcel(), cellProcessors);
 		this.file = file;
-		List<Sheet> sheets = excelService.buildExcelSheetsFromFile(file);
+		this.sheets = excelService.buildExcelSheetsFromFile(file);
 		loadEntityNames(sheets);
 	}
 
@@ -75,14 +80,27 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Override
-	public Repository<Entity> getRepository(String sheetName)
+	public Repository<Entity> getRepository(final String sheetName)
 	{
-		ExcelRepository repository = null;
 		if (entityTypeIds.contains(sheetName))
 		{
-			repository = new ExcelRepository(file, entityTypeFactory, attributeFactory, sheetName, cellProcessors);
+			for (Sheet sheet : sheets)
+			{
+				if (sheet.getSheetName().equals(sheetName))
+				{
+					try (ExcelRepository repository = new ExcelRepository(sheet, entityTypeFactory, attributeFactory,
+							cellProcessors))
+					{
+						return repository;
+					}
+					catch (IOException err)
+					{
+						throw new MolgenisDataException(format("Could not parse sheet [%s]", sheet.getSheetName()));
+					}
+				}
+			}
 		}
-		return repository;
+		return null;
 	}
 
 	@Override

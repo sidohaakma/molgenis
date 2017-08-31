@@ -1,6 +1,7 @@
 package org.molgenis.data.excel;
 
 import com.google.common.collect.Iterables;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.molgenis.data.Entity;
 import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.meta.model.Attribute;
@@ -11,7 +12,6 @@ import org.molgenis.data.processor.CellProcessor;
 import org.molgenis.data.support.AbstractRepository;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
@@ -28,7 +28,7 @@ import static org.molgenis.data.meta.AttributeType.STRING;
  */
 public class ExcelRepository extends AbstractRepository
 {
-	private final File file;
+	private final Sheet sheet;
 	private final String sheetName;
 	private final EntityTypeFactory entityTypeFactory;
 	private final AttributeFactory attrMetaFactory;
@@ -40,17 +40,16 @@ public class ExcelRepository extends AbstractRepository
 
 	private EntityType entityType;
 
-	public ExcelRepository(File file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
-			String sheetName)
+	public ExcelRepository(Sheet sheet, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory)
 	{
-		this(file, entityTypeFactory, attrMetaFactory, sheetName, null);
+		this(sheet, entityTypeFactory, attrMetaFactory, null);
 	}
 
-	public ExcelRepository(File file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
-			String sheetName, @Nullable List<CellProcessor> cellProcessors)
+	public ExcelRepository(Sheet sheet, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
+			@Nullable List<CellProcessor> cellProcessors)
 	{
-		this.file = requireNonNull(file);
-		this.sheetName = sheetName;
+		this.sheet = requireNonNull(sheet);
+		this.sheetName = sheet.getSheetName();
 		this.entityTypeFactory = requireNonNull(entityTypeFactory);
 		this.attrMetaFactory = requireNonNull(attrMetaFactory);
 		this.cellProcessors = cellProcessors;
@@ -59,7 +58,7 @@ public class ExcelRepository extends AbstractRepository
 	@Override
 	public Iterator<Entity> iterator()
 	{
-		return new ExcelIterator(file, sheetName, cellProcessors, getEntityType());
+		return new ExcelIterator(sheet, cellProcessors, getEntityType());
 	}
 
 	public void addCellProcessor(CellProcessor cellProcessor)
@@ -70,20 +69,12 @@ public class ExcelRepository extends AbstractRepository
 
 	public EntityType getEntityType()
 	{
-		String sheetOrFileName;
+		String finalSheetName = this.sheetName.isEmpty() ? sheet.getSheetName() : this.sheetName;
 		if (entityType == null)
 		{
-			if (sheetName == null)
-			{
-				sheetOrFileName = file.getName();
-			}
-			else
-			{
-				sheetOrFileName = sheetName;
-			}
-			entityType = entityTypeFactory.create(sheetOrFileName).setLabel(sheetOrFileName);
+			entityType = entityTypeFactory.create(finalSheetName).setLabel(finalSheetName);
 
-			for (String attrName : new ExcelIterator(file, sheetOrFileName, null).getColNamesMap().keySet())
+			for (String attrName : new ExcelIterator(sheet, null).getColNamesMap().keySet())
 			{
 				Attribute attr = attrMetaFactory.create().setName(attrName).setDataType(STRING);
 				entityType.addAttribute(attr);

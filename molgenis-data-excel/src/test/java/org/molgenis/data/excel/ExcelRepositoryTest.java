@@ -1,9 +1,12 @@
 package org.molgenis.data.excel;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.molgenis.data.AbstractMolgenisSpringTest;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
+import org.molgenis.data.excel.service.ExcelService;
+import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.meta.AttributeType;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
@@ -31,12 +34,15 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 
 	private ExcelRepository excelSheetReader;
 
+	private ExcelService excelService = new ExcelServiceImpl();
+
 	@BeforeMethod
 	public void beforeMethod() throws InvalidFormatException, IOException
 	{
 		File file = ResourceUtils.getFile(getClass(), "/test.xls");
 
-		excelSheetReader = new ExcelRepository(file, entityTypeFactory, attrMetaFactory, "test");
+		Sheet sheet = excelService.buildExcelSheetFromFile(file, "test");
+		excelSheetReader = new ExcelRepository(sheet, entityTypeFactory, attrMetaFactory, null);
 	}
 
 	@SuppressWarnings("resource")
@@ -44,7 +50,8 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 	public void testExcelRepositoryConstructor()
 	{
 		File file = ResourceUtils.getFile(getClass(), "/test.xls");
-		ExcelRepository repository = new ExcelRepository(file, entityTypeFactory, attrMetaFactory, "test_mergedcells");
+		Sheet sheet = excelService.buildExcelSheetFromFile(file, "test_mergedcells");
+		ExcelRepository repository = new ExcelRepository(sheet, entityTypeFactory, attrMetaFactory, null);
 		repository.iterator();
 	}
 

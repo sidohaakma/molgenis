@@ -4,22 +4,16 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellReference;
 import org.molgenis.data.Entity;
-import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.data.processor.AbstractCellProcessor;
 import org.molgenis.data.processor.CellProcessor;
-import org.molgenis.data.support.DynamicEntity;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import static java.lang.String.format;
 
 public class ExcelIterator implements Iterator<Entity>
 {
@@ -33,26 +27,17 @@ public class ExcelIterator implements Iterator<Entity>
 
 	private ExcelService excelService = new ExcelServiceImpl();
 
-	ExcelIterator(File file, String sheetName, List<CellProcessor> cellProcessors)
+	ExcelIterator(Sheet sheet, List<CellProcessor> cellProcessors)
 	{
-		this(file, sheetName, cellProcessors, null);
+		this(sheet, cellProcessors, null);
 	}
 
-	ExcelIterator(File file, String sheetName, List<CellProcessor> cellProcessors, EntityType entityType)
+	ExcelIterator(Sheet sheet, List<CellProcessor> cellProcessors, EntityType entityType)
 	{
 		this.cellProcessors = cellProcessors;
 		this.entityType = entityType;
-		Sheet content;
-		if (sheetName == null)
-		{
-			throw new MolgenisDataException(format("No sheet name is specified for file [%s]", file.getName()));
-		}
-		else
-		{
-			content = excelService.buildExcelSheetFromFile(file, sheetName);
-		}
-		colNamesMap = toColNamesMap(content);
-		rowIterator = content.iterator();
+		this.colNamesMap = toColNamesMap(sheet);
+		this.rowIterator = sheet.iterator();
 	}
 
 	@Override
@@ -73,18 +58,9 @@ public class ExcelIterator implements Iterator<Entity>
 					row = rowIterator.next();
 				}
 			}
-			if (row != null && row.getPhysicalNumberOfCells() >= colNamesMap.size())
+			if (row != null)
 			{
-				List<String> valueList = new ArrayList<>();
-				row.cellIterator().forEachRemaining(cell ->
-				{
-					String value = excelService.toValue(cell).isEmpty() ? null : excelService.toValue(cell);
-					valueList.add(processCell(value, false));
-				});
-
-				next = new DynamicEntity(entityType);
-
-				colNamesMap.keySet().forEach(name -> next.set(name, valueList.get(colNamesMap.get(name))));
+				next = new ExcelEntity(row, colNamesMap, cellProcessors, entityType);
 			}
 			else
 			{
@@ -93,7 +69,6 @@ public class ExcelIterator implements Iterator<Entity>
 		}
 		return next;
 	}
-
 
 	@Override
 	public Entity next()
