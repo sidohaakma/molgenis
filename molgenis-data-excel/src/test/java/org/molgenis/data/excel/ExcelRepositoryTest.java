@@ -1,5 +1,6 @@
 package org.molgenis.data.excel;
 
+import com.google.common.collect.Lists;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.molgenis.data.AbstractMolgenisSpringTest;
@@ -10,8 +11,10 @@ import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.meta.AttributeType;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
+import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.data.meta.model.EntityTypeFactory;
 import org.molgenis.data.processor.CellProcessor;
+import org.molgenis.data.processor.TrimProcessor;
 import org.molgenis.util.ResourceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testng.annotations.BeforeMethod;
@@ -20,8 +23,9 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.molgenis.data.meta.AttributeType.STRING;
 import static org.testng.Assert.*;
 
 public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
@@ -30,9 +34,11 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 	private EntityTypeFactory entityTypeFactory;
 
 	@Autowired
-	private AttributeFactory attrMetaFactory;
+	private AttributeFactory attributeFactory;
 
-	private ExcelRepository excelSheetReader;
+	private ExcelRepository excelRepository;
+
+	private List<CellProcessor> processors = Lists.newArrayList(new TrimProcessor());
 
 	private ExcelService excelService = new ExcelServiceImpl();
 
@@ -40,54 +46,39 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 	public void beforeMethod() throws InvalidFormatException, IOException
 	{
 		File file = ResourceUtils.getFile(getClass(), "/test.xls");
-
 		Sheet sheet = excelService.buildExcelSheetFromFile(file, "test");
-		excelSheetReader = new ExcelRepository(sheet, entityTypeFactory, attrMetaFactory, null);
+		List<String> columns = excelService.parseHeader(sheet, processors);
+		EntityType entityType = getEntityType("test", columns);
+		excelRepository = new ExcelRepository(excelService, sheet, columns, entityType, processors);
+	}
+
+	private EntityType getEntityType(String repositoryName, List<String> columns)
+	{
+		EntityType entityType = entityTypeFactory.create(repositoryName).setLabel(repositoryName);
+
+		columns.stream()
+			   .map(column -> attributeFactory.create().setName(column).setDataType(STRING))
+			   .forEach(entityType::addAttribute);
+
+		return entityType;
 	}
 
 	@SuppressWarnings("resource")
 	@Test(expectedExceptions = MolgenisDataException.class)
+
 	public void testExcelRepositoryConstructor()
 	{
 		File file = ResourceUtils.getFile(getClass(), "/test.xls");
 		Sheet sheet = excelService.buildExcelSheetFromFile(file, "test_mergedcells");
-		ExcelRepository repository = new ExcelRepository(sheet, entityTypeFactory, attrMetaFactory, null);
+		List<String> columns = excelService.parseHeader(sheet, processors);
+		ExcelRepository repository = new ExcelRepository(excelService, sheet, columns, null, processors);
 		repository.iterator();
-	}
-
-	@Test
-	public void testAddCellProcessorHeader()
-	{
-		CellProcessor processor = mock(CellProcessor.class);
-		when(processor.processHeader()).thenReturn(true);
-		when(processor.process("col1")).thenReturn("col1");
-		when(processor.process("col2")).thenReturn("col2");
-
-		excelSheetReader.addCellProcessor(processor);
-		for (@SuppressWarnings("unused") Entity entity : excelSheetReader)
-		{
-		}
-		verify(processor).process("col1");
-		verify(processor).process("col2");
-	}
-
-	@Test
-	public void testAddCellProcessorData()
-	{
-		CellProcessor processor = when(mock(CellProcessor.class).processData()).thenReturn(true).getMock();
-		excelSheetReader.addCellProcessor(processor);
-		for (Entity entity : excelSheetReader)
-			entity.get("col2");
-
-		verify(processor).process("val2");
-		verify(processor).process("val4");
-		verify(processor).process("val6");
 	}
 
 	@Test
 	public void testGetAttribute()
 	{
-		Attribute attr = excelSheetReader.getEntityType().getAttribute("col1");
+		Attribute attr = excelRepository.getEntityType().getAttribute("col1");
 		assertNotNull(attr);
 		assertEquals(attr.getDataType(), AttributeType.STRING);
 		assertEquals(attr.getName(), "col1");
@@ -96,7 +87,7 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 	@Test
 	public void testGetAttributes()
 	{
-		Iterator<Attribute> it = excelSheetReader.getEntityType().getAttributes().iterator();
+		Iterator<Attribute> it = excelRepository.getEntityType().getAttributes().iterator();
 		assertTrue(it.hasNext());
 		assertEquals(it.next().getName(), "col1");
 		assertTrue(it.hasNext());
@@ -107,37 +98,37 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 	@Test
 	public void testGetDescription()
 	{
-		assertNull(excelSheetReader.getEntityType().getDescription());
+		assertNull(excelRepository.getEntityType().getDescription());
 	}
 
 	@Test
 	public void testGetIdAttribute()
 	{
-		assertNull(excelSheetReader.getEntityType().getIdAttribute());
+		assertNull(excelRepository.getEntityType().getIdAttribute());
 	}
 
 	@Test
 	public void testGetLabel()
 	{
-		assertEquals(excelSheetReader.getEntityType().getLabel(), "test");
+		assertEquals(excelRepository.getEntityType().getLabel(), "test");
 	}
 
 	@Test
 	public void testGetLabelAttribute()
 	{
-		assertNull(excelSheetReader.getEntityType().getLabelAttribute());
+		assertNull(excelRepository.getEntityType().getLabelAttribute());
 	}
 
 	@Test
 	public void testGetName()
 	{
-		assertEquals(excelSheetReader.getName(), "test");
+		assertEquals(excelRepository.getName(), "test");
 	}
 
 	@Test
 	public void testIterator()
 	{
-		Iterator<Entity> it = excelSheetReader.iterator();
+		Iterator<Entity> it = excelRepository.iterator();
 		assertTrue(it.hasNext());
 
 		Entity row1 = it.next();
@@ -165,13 +156,13 @@ public class ExcelRepositoryTest extends AbstractMolgenisSpringTest
 	@Test
 	public void testAttributesAndIterator() throws IOException
 	{
-		Iterator<Attribute> headerIt = excelSheetReader.getEntityType().getAttributes().iterator();
+		Iterator<Attribute> headerIt = excelRepository.getEntityType().getAttributes().iterator();
 		assertTrue(headerIt.hasNext());
 		assertEquals(headerIt.next().getName(), "col1");
 		assertTrue(headerIt.hasNext());
 		assertEquals(headerIt.next().getName(), "col2");
 
-		Iterator<Entity> it = excelSheetReader.iterator();
+		Iterator<Entity> it = excelRepository.iterator();
 		assertTrue(it.hasNext());
 
 		Entity row1 = it.next();

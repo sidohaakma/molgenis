@@ -1,7 +1,10 @@
 package org.molgenis.data.excel.service;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.molgenis.data.processor.CellProcessor;
+import org.molgenis.util.Pair;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -68,6 +71,10 @@ public interface ExcelService
 	 * <p>Gets a cell value as String and process the value with the given cellProcessors</p>
 	 */
 	String toValue(Cell cell);
+
+	List<String> parseHeader(Sheet sheet, List<CellProcessor> processors);
+
+	List<Pair<Integer, String>> parse(Row row, List<CellProcessor> processors);
 
 	/**
 	 * @param file

@@ -1,12 +1,11 @@
 package org.molgenis.data.excel;
 
-import com.google.common.collect.Lists;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.molgenis.data.Entity;
-import org.molgenis.data.MolgenisDataException;
+import org.molgenis.data.MolgenisInvalidFormatException;
 import org.molgenis.data.Repository;
+import org.molgenis.data.UnknownEntityException;
 import org.molgenis.data.excel.service.ExcelService;
-import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.excel.utils.ExcelFileExtensions;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
@@ -18,11 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-import static java.lang.String.format;
+import static org.molgenis.data.meta.AttributeType.STRING;
 
 /**
  * Read an excel file and iterate through the sheets.
@@ -33,44 +34,33 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 {
 	public static final String NAME = "EXCEL";
 
-	private final File file;
+	@Autowired
+	private ExcelService excelService;
+	@Autowired
 	private EntityTypeFactory entityTypeFactory;
+	@Autowired
 	private AttributeFactory attributeFactory;
 
+	private final File file;
 	private List<String> entityTypeIds;
-	private List<String> entityTypeIdsLowerCase;
-	private List<Sheet> sheets = new ArrayList<>();
+	private List<Sheet> sheets;
 
-	private ExcelService excelService = new ExcelServiceImpl();
-
-	public ExcelRepositoryCollection(File file)
+	public ExcelRepositoryCollection(File file) throws IOException, MolgenisInvalidFormatException
 	{
-		this(file, new TrimProcessor());
+		this(file, Collections.singletonList(new TrimProcessor()));
 	}
 
-	public ExcelRepositoryCollection(File file, CellProcessor... cellProcessors)
+	private ExcelRepositoryCollection(File file, List<CellProcessor> processors)
 	{
-		super(ExcelFileExtensions.getExcel(), cellProcessors);
-		this.file = file;
-		this.sheets = excelService.buildExcelSheetsFromFile(file);
-		loadEntityNames(sheets);
-	}
-
-	private void loadEntityNames(List<Sheet> sheets)
-	{
-		entityTypeIds = Lists.newArrayList();
-		entityTypeIdsLowerCase = Lists.newArrayList();
-		sheets.forEach(sheet ->
-		{
-			entityTypeIds.add(sheet.getSheetName());
-			entityTypeIdsLowerCase.add(sheet.getSheetName().toLowerCase());
-		});
+		super(ExcelFileExtensions.getExcel(), processors.toArray(new CellProcessor[0]));
+		this.file = Objects.requireNonNull(file);
 	}
 
 	@Override
 	public void init() throws IOException
 	{
-		// no operation
+		this.sheets = excelService.buildExcelSheetsFromFile(this.file);
+		this.entityTypeIds = sheets.stream().map(Sheet::getSheetName).collect(Collectors.toList());
 	}
 
 	@Override
@@ -82,25 +72,25 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	@Override
 	public Repository<Entity> getRepository(final String sheetName)
 	{
-		if (entityTypeIds.contains(sheetName))
-		{
-			for (Sheet sheet : sheets)
-			{
-				if (sheet.getSheetName().equals(sheetName))
-				{
-					try (ExcelRepository repository = new ExcelRepository(sheet, entityTypeFactory, attributeFactory,
-							cellProcessors))
-					{
-						return repository;
-					}
-					catch (IOException err)
-					{
-						throw new MolgenisDataException(format("Could not parse sheet [%s]", sheet.getSheetName()));
-					}
-				}
-			}
-		}
-		return null;
+		Sheet sheet = sheets.stream()
+							.filter(candidate -> candidate.getSheetName().equals(sheetName))
+							.findFirst()
+							.orElseThrow(UnknownEntityException::new);
+
+		List<String> columns = excelService.parseHeader(sheet, cellProcessors);
+		return new ExcelRepository(excelService, sheet, columns, getEntityType(sheet.getSheetName(), columns),
+				cellProcessors);
+	}
+
+	private EntityType getEntityType(String repositoryName, List<String> columns)
+	{
+		EntityType entityType = entityTypeFactory.create(repositoryName).setLabel(repositoryName);
+
+		columns.stream()
+			   .map(column -> attributeFactory.create().setName(column).setDataType(STRING))
+			   .forEach(entityType::addAttribute);
+
+		return entityType;
 	}
 
 	@Override
@@ -149,6 +139,12 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Autowired
+	public void setExcelService(ExcelService excelService)
+	{
+		this.excelService = excelService;
+	}
+
+	@Autowired
 	public void setEntityTypeFactory(EntityTypeFactory entityTypeFactory)
 	{
 		this.entityTypeFactory = entityTypeFactory;
@@ -159,4 +155,5 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	{
 		this.attributeFactory = attributeFactory;
 	}
+
 }

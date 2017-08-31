@@ -1,21 +1,23 @@
 package org.molgenis.data.excel;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.molgenis.data.Entity;
 import org.molgenis.data.RepositoryCapability;
-import org.molgenis.data.meta.model.Attribute;
-import org.molgenis.data.meta.model.AttributeFactory;
+import org.molgenis.data.excel.service.ExcelService;
 import org.molgenis.data.meta.model.EntityType;
-import org.molgenis.data.meta.model.EntityTypeFactory;
 import org.molgenis.data.processor.CellProcessor;
 import org.molgenis.data.support.AbstractRepository;
+import org.molgenis.data.support.DynamicEntity;
+import org.molgenis.util.Pair;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
-import static org.molgenis.data.meta.AttributeType.STRING;
 
 /**
  * ExcelSheet {@link org.molgenis.data.Repository} implementation
@@ -29,58 +31,43 @@ import static org.molgenis.data.meta.AttributeType.STRING;
 public class ExcelRepository extends AbstractRepository
 {
 	private final Sheet sheet;
-	private final String sheetName;
-	private final EntityTypeFactory entityTypeFactory;
-	private final AttributeFactory attrMetaFactory;
+	private final List<String> columns;
+	private final ExcelService excelService;
+	private final List<CellProcessor> processors;
+	private final EntityType entityType;
 
-	/**
-	 * process cells after reading
-	 */
-	private List<CellProcessor> cellProcessors;
-
-	private EntityType entityType;
-
-	public ExcelRepository(Sheet sheet, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory)
+	public ExcelRepository(ExcelService excelService, Sheet sheet, List<String> columns, EntityType entityType,
+			List<CellProcessor> processors)
 	{
-		this(sheet, entityTypeFactory, attrMetaFactory, null);
-	}
-
-	public ExcelRepository(Sheet sheet, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
-			@Nullable List<CellProcessor> cellProcessors)
-	{
+		this.excelService = requireNonNull(excelService);
 		this.sheet = requireNonNull(sheet);
-		this.sheetName = sheet.getSheetName();
-		this.entityTypeFactory = requireNonNull(entityTypeFactory);
-		this.attrMetaFactory = requireNonNull(attrMetaFactory);
-		this.cellProcessors = cellProcessors;
+		this.columns = requireNonNull(columns);
+		this.entityType = requireNonNull(entityType);
+		this.processors = requireNonNull(processors);
 	}
 
 	@Override
 	public Iterator<Entity> iterator()
 	{
-		return new ExcelIterator(sheet, cellProcessors, getEntityType());
+		return Streams.stream(sheet.rowIterator())
+					  .skip(1)
+					  .map(row -> excelService.parse(row, processors))
+					  .map(this::toEntity)
+					  .iterator();
 	}
 
-	public void addCellProcessor(CellProcessor cellProcessor)
+	private Entity toEntity(List<Pair<Integer, String>> values)
 	{
-		if (cellProcessors == null) cellProcessors = new ArrayList<>();
-		cellProcessors.add(cellProcessor);
+		Entity entity = new DynamicEntity(entityType);
+		values.stream()
+			  .filter(pair -> pair.getA() < columns.size())
+			  .forEach(pair -> entity.set(columns.get(pair.getA()), pair.getB()));
+		return entity;
 	}
 
+	@Override
 	public EntityType getEntityType()
 	{
-		String finalSheetName = this.sheetName.isEmpty() ? sheet.getSheetName() : this.sheetName;
-		if (entityType == null)
-		{
-			entityType = entityTypeFactory.create(finalSheetName).setLabel(finalSheetName);
-
-			for (String attrName : new ExcelIterator(sheet, null).getColNamesMap().keySet())
-			{
-				Attribute attr = attrMetaFactory.create().setName(attrName).setDataType(STRING);
-				entityType.addAttribute(attr);
-			}
-		}
-
 		return entityType;
 	}
 
