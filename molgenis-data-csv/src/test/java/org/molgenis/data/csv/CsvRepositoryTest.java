@@ -1,14 +1,18 @@
 package org.molgenis.data.csv;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.molgenis.data.AbstractMolgenisSpringTest;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
+import org.molgenis.data.csv.service.CsvService;
+import org.molgenis.data.csv.service.CsvServiceImpl;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
+import org.molgenis.data.meta.model.EntityType;
 import org.molgenis.data.meta.model.EntityTypeFactory;
-import org.molgenis.data.processor.CellProcessor;
+import org.molgenis.data.processor.TrimProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileCopyUtils;
 import org.testng.annotations.BeforeClass;
@@ -19,17 +23,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-import static org.mockito.Mockito.*;
+import static org.molgenis.data.meta.AttributeType.STRING;
 import static org.testng.Assert.*;
 
 public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 {
+
+	private CsvService csvService = new CsvServiceImpl();
+
 	@Autowired
 	private EntityTypeFactory entityTypeFactory;
 
 	@Autowired
-	private AttributeFactory attrMetaFactory;
+	private AttributeFactory attributeFactory;
 
 	private static File test;
 	private static File testdata;
@@ -72,45 +81,15 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 	}
 
 	@Test
-	public void addCellProcessor_header() throws IOException
-	{
-		CellProcessor processor = when(mock(CellProcessor.class).processHeader()).thenReturn(true).getMock();
-		when(processor.process("col1")).thenReturn("col1");
-		when(processor.process("col2")).thenReturn("col2");
-
-		try (CsvRepository csvRepository = new CsvRepository(test, entityTypeFactory, attrMetaFactory, null))
-		{
-			csvRepository.addCellProcessor(processor);
-			for (@SuppressWarnings("unused") Entity entity : csvRepository)
-			{
-			}
-			verify(processor).process("col1");
-			verify(processor).process("col2");
-		}
-	}
-
-	@Test
-	public void addCellProcessor_data() throws IOException
-	{
-		CellProcessor processor = when(mock(CellProcessor.class).processData()).thenReturn(true).getMock();
-		try (CsvRepository csvRepository = new CsvRepository(test, entityTypeFactory, attrMetaFactory, null))
-		{
-			csvRepository.addCellProcessor(processor);
-			for (@SuppressWarnings("unused") Entity entity : csvRepository)
-			{
-			}
-			verify(processor).process("val1");
-			verify(processor).process("val2");
-		}
-	}
-
-	@Test
 	public void metaData() throws IOException
 	{
 		CsvRepository csvRepository = null;
 		try
 		{
-			csvRepository = new CsvRepository(testdata, entityTypeFactory, attrMetaFactory, null);
+			Map<String, List<String[]>> lines = csvService.buildLinesFromFile(testdata);
+			List<String> columns = csvService.parseHeader(lines, "testdata", Lists.newArrayList(new TrimProcessor()));
+			csvRepository = new CsvRepository(lines, columns, "testdata", getEntityType("testdata", columns),
+					Lists.newArrayList(new TrimProcessor()));
 			assertEquals(csvRepository.getName(), "testdata");
 			Iterator<Attribute> it = csvRepository.getEntityType().getAttributes().iterator();
 			assertTrue(it.hasNext());
@@ -134,7 +113,11 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 		CsvRepository csvRepository = null;
 		try
 		{
-			csvRepository = new CsvRepository(testdata, entityTypeFactory, attrMetaFactory, null);
+			Map<String, List<String[]>> lines = csvService.buildLinesFromFile(testdata);
+			List<String> columns = csvService.parseHeader(lines, "testdata", Lists.newArrayList(new TrimProcessor()));
+
+			csvRepository = new CsvRepository(lines, columns, "testdata", getEntityType("testdata", columns),
+					Lists.newArrayList(new TrimProcessor()));
 			Iterator<Entity> it = csvRepository.iterator();
 
 			assertTrue(it.hasNext());
@@ -174,64 +157,84 @@ public class CsvRepositoryTest extends AbstractMolgenisSpringTest
 	@Test(expectedExceptions = MolgenisDataException.class, expectedExceptionsMessageRegExp = "Header was found, but no data is present in file \\[novalues\\.csv\\]")
 	public void testIteratorNoValues() throws IOException
 	{
-		try (CsvRepository csvRepository = new CsvRepository(novalues, entityTypeFactory, attrMetaFactory, null))
-		{
-			Iterator<Entity> it = csvRepository.iterator();
-			assertFalse(it.hasNext());
-		}
+		Map<String, List<String[]>> lines = csvService.buildLinesFromFile(novalues);
+		List<String> columns = csvService.parseHeader(lines, "novalues", Lists.newArrayList(new TrimProcessor()));
+		CsvRepository csvRepository = new CsvRepository(lines, columns, "novalues", getEntityType("novalues", columns),
+				Lists.newArrayList(new TrimProcessor()));
+		Iterator<Entity> it = csvRepository.iterator();
+		assertFalse(it.hasNext());
+
 	}
 
 	@Test
 	public void testIteratorEmptyValues() throws IOException
 	{
-		try (CsvRepository csvRepository = new CsvRepository(emptyvalues, entityTypeFactory, attrMetaFactory, null))
-		{
-			Iterator<Entity> it = csvRepository.iterator();
-			assertTrue(it.hasNext());
-			assertNull(it.next().get("col1"));
-		}
+		Map<String, List<String[]>> lines = csvService.buildLinesFromFile(emptylines);
+		List<String> columns = csvService.parseHeader(lines, "emptyvalues", Lists.newArrayList(new TrimProcessor()));
+		CsvRepository csvRepository = new CsvRepository(lines, columns, "emptyvalues",
+				getEntityType("emptyvalues", columns), Lists.newArrayList(new TrimProcessor()));
+		Iterator<Entity> it = csvRepository.iterator();
+		assertTrue(it.hasNext());
+		assertNull(it.next().get("col1"));
 	}
 
 	@Test
 	public void testIteratorTsv() throws IOException
 	{
-		try (CsvRepository tsvRepository = new CsvRepository(testtsv, entityTypeFactory, attrMetaFactory, null))
-		{
-			Iterator<Entity> it = tsvRepository.iterator();
-			Entity entity = it.next();
-			assertEquals(entity.get("col1"), "val1");
-			assertEquals(entity.get("col2"), "val2");
-			assertFalse(it.hasNext());
-		}
+		Map<String, List<String[]>> lines = csvService.buildLinesFromFile(testtsv);
+		List<String> columns = csvService.parseHeader(lines, "testtsv", Lists.newArrayList(new TrimProcessor()));
+		CsvRepository tsvRepository = new CsvRepository(lines, columns, "testtsv", getEntityType("testtsv", columns),
+				Lists.newArrayList(new TrimProcessor()));
+
+		Iterator<Entity> it = tsvRepository.iterator();
+		Entity entity = it.next();
+		assertEquals(entity.get("col1"), "val1");
+		assertEquals(entity.get("col2"), "val2");
+		assertFalse(it.hasNext());
+
 	}
 
 	@Test(expectedExceptions = MolgenisDataException.class, expectedExceptionsMessageRegExp = "Column count \\[1\\] is not greater or equal then header count \\[2\\] \\(in CSV-file \\[emptylines\\.csv\\]\\)")
 	public void testIteratorEmptyLines() throws IOException
 	{
-		try (CsvRepository csvRepository = new CsvRepository(emptylines, entityTypeFactory, attrMetaFactory, null))
-		{
-			Iterator<Entity> it = csvRepository.iterator();
-			Entity entity = it.next();
-			assertEquals(entity.get("col1"), "val1");
-			assertFalse(it.hasNext());
-		}
+		Map<String, List<String[]>> lines = csvService.buildLinesFromFile(emptylines);
+		List<String> columns = csvService.parseHeader(lines, "emptyLines", Lists.newArrayList(new TrimProcessor()));
+		CsvRepository csvRepository = new CsvRepository(lines, columns, "emptyLines",
+				getEntityType("emptyLines", columns), Lists.newArrayList(new TrimProcessor()));
+		Iterator<Entity> it = csvRepository.iterator();
+		Entity entity = it.next();
+		assertEquals(entity.get("col1"), "val1");
+		assertFalse(it.hasNext());
 	}
 
 	@Test
-	public void iterator_emptylines_singlecol() throws IOException
+	public void testIteratorEmptyLinesMissingColumns() throws IOException
 	{
-		try (CsvRepository csvRepository = new CsvRepository(emptylinessinglecol, entityTypeFactory, attrMetaFactory,
-				null))
-		{
-			Iterator<Entity> it = csvRepository.iterator();
-			Entity entity = it.next();
-			assertEquals(entity.get("col1"), "val1");
+		Map<String, List<String[]>> lines = csvService.buildLinesFromFile(emptylinessinglecol);
+		List<String> columns = csvService.parseHeader(lines, "emptylinessinglecol",
+				Lists.newArrayList(new TrimProcessor()));
+		CsvRepository csvRepository = new CsvRepository(lines, columns, "emptylinessinglecol",
+				getEntityType("emptylinessinglecol", columns), Lists.newArrayList(new TrimProcessor()));
+		Iterator<Entity> it = csvRepository.iterator();
+		Entity entity = it.next();
+		assertEquals(entity.get("col1"), "val1");
 
-			assertTrue(it.hasNext());
-			entity = it.next();
-			assertNull(entity.get("col1"));
+		assertTrue(it.hasNext());
+		entity = it.next();
+		assertNull(entity.get("col1"));
 
-			assertFalse(it.hasNext());
-		}
+		assertFalse(it.hasNext());
+	}
+
+	private EntityType getEntityType(String repositoryName, List<String> columns)
+	{
+		EntityType entityType = entityTypeFactory.create(repositoryName).setLabel(repositoryName);
+
+		columns.stream()
+			   .map(column -> attributeFactory.create().setName(column).setDataType(STRING))
+			   .forEach(entityType::addAttribute);
+
+		return entityType;
 	}
 }
+

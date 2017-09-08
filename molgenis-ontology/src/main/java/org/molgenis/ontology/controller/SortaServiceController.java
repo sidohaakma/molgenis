@@ -1,12 +1,12 @@
 package org.molgenis.ontology.controller;
 
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.molgenis.auth.User;
 import org.molgenis.data.*;
 import org.molgenis.data.QueryRule.Operator;
 import org.molgenis.data.csv.CsvWriter;
+import org.molgenis.data.csv.service.CsvService;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.jobs.model.JobExecutionMetaData;
 import org.molgenis.data.meta.model.Attribute;
@@ -36,7 +36,6 @@ import org.molgenis.ontology.sorta.service.impl.SortaServiceImpl;
 import org.molgenis.ontology.utils.SortaServiceUtil;
 import org.molgenis.security.core.Permission;
 import org.molgenis.security.core.PermissionService;
-import org.molgenis.security.core.runas.RunAsSystemAspect;
 import org.molgenis.security.permission.PermissionSystemService;
 import org.molgenis.security.user.UserAccountService;
 import org.molgenis.ui.menu.MenuReaderService;
@@ -45,8 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -66,6 +63,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -78,6 +76,7 @@ import static org.molgenis.ontology.controller.SortaServiceController.URI;
 import static org.molgenis.ontology.sorta.meta.MatchingTaskContentMetaData.*;
 import static org.molgenis.ontology.sorta.meta.SortaJobExecutionMetaData.SORTA_JOB_EXECUTION;
 import static org.molgenis.ontology.utils.SortaServiceUtil.getEntityAsMap;
+import static org.molgenis.security.core.runas.RunAsSystemAspect.runAsSystem;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -90,6 +89,7 @@ public class SortaServiceController extends PluginController
 	private final SortaService sortaService;
 	private final DataService dataService;
 	private final UserAccountService userAccountService;
+	private final CsvService csvService;
 	private final SortaJobFactory sortaMatchJobFactory;
 	private final ExecutorService taskExecutor;
 	private final FileStore fileStore;
@@ -115,7 +115,7 @@ public class SortaServiceController extends PluginController
 	@Autowired
 	public SortaServiceController(OntologyService ontologyService, SortaService sortaService,
 			SortaJobFactory sortaMatchJobFactory, ExecutorService taskExecutor, UserAccountService userAccountService,
-			FileStore fileStore, PermissionService permissionService, DataService dataService,
+			CsvService csvService, FileStore fileStore, PermissionService permissionService, DataService dataService,
 			LanguageService languageService, MenuReaderService menuReaderService, IdGenerator idGenerator,
 			PermissionSystemService permissionSystemService, MatchingTaskContentMetaData matchingTaskContentMetaData,
 			SortaJobExecutionMetaData sortaJobExecutionMetaData, OntologyTermMetaData ontologyTermMetaData,
@@ -128,6 +128,7 @@ public class SortaServiceController extends PluginController
 		this.sortaMatchJobFactory = requireNonNull(sortaMatchJobFactory);
 		this.taskExecutor = requireNonNull(taskExecutor);
 		this.userAccountService = requireNonNull(userAccountService);
+		this.csvService = requireNonNull(csvService);
 		this.fileStore = requireNonNull(fileStore);
 		this.permissionService = requireNonNull(permissionService);
 		this.dataService = requireNonNull(dataService);
@@ -154,10 +155,8 @@ public class SortaServiceController extends PluginController
 	{
 		Fetch fetch = new Fetch();
 		sortaJobExecutionMetaData.getAtomicAttributes().forEach(attr -> fetch.field(attr.getName()));
-		SortaJobExecution result = RunAsSystemAspect.runAsSystem(
-				() -> dataService.findOneById(SORTA_JOB_EXECUTION, sortaJobExecutionId, fetch,
-						SortaJobExecution.class));
-		return result;
+		return runAsSystem(() -> dataService.findOneById(SORTA_JOB_EXECUTION, sortaJobExecutionId, fetch,
+				SortaJobExecution.class));
 	}
 
 	@RequestMapping(method = GET, value = "/jobs")
@@ -186,7 +185,7 @@ public class SortaServiceController extends PluginController
 				User currentUser = userAccountService.getCurrentUser();
 				if (currentUser.isSuperuser() || sortaJobExecution.getUser().equals(currentUser.getUsername()))
 				{
-					RunAsSystemAspect.runAsSystem(() ->
+					runAsSystem(() ->
 					{
 						Double thresholdValue = Double.parseDouble(threshold);
 						sortaJobExecution.setThreshold(thresholdValue);
@@ -247,8 +246,7 @@ public class SortaServiceController extends PluginController
 			User currentUser = userAccountService.getCurrentUser();
 			if (currentUser.isSuperuser() || sortaJobExecution.getUser().equals(currentUser.getUsername()))
 			{
-				RunAsSystemAspect.runAsSystem(
-						() -> dataService.deleteById(SORTA_JOB_EXECUTION, sortaJobExecution.getIdentifier()));
+				runAsSystem(() -> dataService.deleteById(SORTA_JOB_EXECUTION, sortaJobExecution.getIdentifier()));
 				tryDeleteRepository(sortaJobExecution.getResultEntityName());
 				tryDeleteRepository(sortaJobExecution.getSourceEntityName());
 			}
@@ -261,7 +259,7 @@ public class SortaServiceController extends PluginController
 		if (dataService.hasRepository(entityTypeId) && permissionService.hasPermissionOnEntityType(entityTypeId,
 				Permission.WRITEMETA))
 		{
-			RunAsSystemAspect.runAsSystem(() -> deleteRepository(entityTypeId));
+			runAsSystem(() -> deleteRepository(entityTypeId));
 		}
 		else
 		{
@@ -438,10 +436,9 @@ public class SortaServiceController extends PluginController
 
 	@RequestMapping(method = GET, value = "/match/download/{sortaJobExecutionId}")
 	public void download(@PathVariable String sortaJobExecutionId, HttpServletResponse response, Model model)
-			throws IOException
 	{
-		CsvWriter csvWriter = new CsvWriter(response.getOutputStream(), SortaServiceImpl.DEFAULT_SEPARATOR);
-		try
+
+		try (CsvWriter csvWriter = new CsvWriter(response.getOutputStream(), SortaServiceImpl.DEFAULT_SEPARATOR))
 		{
 			SortaJobExecution sortaJobExecution = findSortaJobExecution(sortaJobExecutionId);
 
@@ -463,9 +460,10 @@ public class SortaServiceController extends PluginController
 			dataService.findAll(sortaJobExecution.getResultEntityName(), new QueryImpl<>())
 					   .forEach(resultEntity -> csvWriter.add(toDownloadRow(sortaJobExecution, resultEntity)));
 		}
-		finally
+		catch (IOException err)
 		{
-			if (csvWriter != null) IOUtils.closeQuietly(csvWriter);
+			throw new MolgenisDataException(
+					format("Could not download file [%s]", generateCsvFileName("match-result")));
 		}
 	}
 
@@ -476,7 +474,7 @@ public class SortaServiceController extends PluginController
 		File uploadFile = fileStore.store(inputStream, sessionId + ".csv");
 		String inputRepositoryName = idGenerator.generateId();
 		SortaCsvRepository inputRepository = new SortaCsvRepository(inputRepositoryName, jobName + " input", uploadFile,
-				entityTypeFactory, attrMetaFactory);
+				csvService);
 
 		if (!validateFileHeader(inputRepository))
 		{
@@ -496,8 +494,7 @@ public class SortaServiceController extends PluginController
 			return matchTask(model);
 		}
 
-		SortaJobExecution jobExecution = createJobExecution(inputRepository, jobName, ontologyIri,
-				SecurityContextHolder.getContext());
+		SortaJobExecution jobExecution = createJobExecution(inputRepository, jobName, ontologyIri);
 		SortaJobImpl sortaMatchJob = sortaMatchJobFactory.create(jobExecution);
 		taskExecutor.submit(sortaMatchJob);
 
@@ -510,7 +507,7 @@ public class SortaServiceController extends PluginController
 		User currentUser = userAccountService.getCurrentUser();
 		Query<Entity> query = QueryImpl.EQ(JobExecutionMetaData.USER, currentUser.getUsername());
 		query.sort().on(JobExecutionMetaData.START_DATE, DESC);
-		RunAsSystemAspect.runAsSystem(() -> dataService.findAll(SORTA_JOB_EXECUTION, query).forEach(job ->
+		runAsSystem(() -> dataService.findAll(SORTA_JOB_EXECUTION, query).forEach(job ->
 		{
 			// TODO: fetch the user as well
 			job.set(JobExecutionMetaData.USER, currentUser.getUsername());
@@ -519,8 +516,7 @@ public class SortaServiceController extends PluginController
 		return jobs;
 	}
 
-	private SortaJobExecution createJobExecution(Repository<Entity> inputData, String jobName, String ontologyIri,
-			SecurityContext securityContext)
+	private SortaJobExecution createJobExecution(Repository<Entity> inputData, String jobName, String ontologyIri)
 	{
 		String resultEntityName = idGenerator.generateId();
 
@@ -534,10 +530,10 @@ public class SortaServiceController extends PluginController
 		sortaJobExecution.setThreshold(DEFAULT_THRESHOLD);
 		sortaJobExecution.setOntologyIri(ontologyIri);
 
-		RunAsSystemAspect.runAsSystem(() ->
+		runAsSystem(() ->
 		{
 			createInputRepository(inputData);
-			createEmptyResultRepository(jobName, resultEntityName, inputData.getEntityType());
+			createEmptyResultRepository(jobName, inputData.getEntityType());
 			dataService.add(SORTA_JOB_EXECUTION, sortaJobExecution);
 		});
 
@@ -547,7 +543,7 @@ public class SortaServiceController extends PluginController
 		return sortaJobExecution;
 	}
 
-	private void createEmptyResultRepository(String jobName, String resultEntityName, EntityType sourceMetaData)
+	private void createEmptyResultRepository(String jobName, EntityType sourceMetaData)
 	{
 		EntityType resultEntityType = EntityType.newInstance(matchingTaskContentMetaData, DEEP_COPY_ATTRS,
 				attrMetaFactory);
@@ -592,19 +588,16 @@ public class SortaServiceController extends PluginController
 
 	private boolean validateFileHeader(Repository<Entity> repository)
 	{
-		boolean containsName = StreamSupport.stream(repository.getEntityType().getAttributes().spliterator(), false)
-											.map(Attribute::getName)
-											.anyMatch(name -> name.equalsIgnoreCase(
-													SortaServiceImpl.DEFAULT_MATCHING_NAME_FIELD));
-		return containsName;
+		return StreamSupport.stream(repository.getEntityType().getAttributes().spliterator(), false)
+							.map(Attribute::getName)
+							.anyMatch(name -> name.equalsIgnoreCase(SortaServiceImpl.DEFAULT_MATCHING_NAME_FIELD));
 	}
 
 	private boolean validateEmptyFileHeader(Repository<Entity> repository)
 	{
-		boolean evaluation = StreamSupport.stream(repository.getEntityType().getAttributes().spliterator(), false)
-										  .map(Attribute::getName)
-										  .anyMatch(StringUtils::isNotBlank);
-		return evaluation;
+		return StreamSupport.stream(repository.getEntityType().getAttributes().spliterator(), false)
+							.map(Attribute::getName)
+							.anyMatch(StringUtils::isNotBlank);
 	}
 
 	private boolean validateInputFileContent(Repository<Entity> repository)

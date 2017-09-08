@@ -1,5 +1,6 @@
 package org.molgenis.data.annotation.core.entity.impl;
 
+import com.google.common.collect.Lists;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
@@ -19,9 +20,10 @@ import org.molgenis.data.annotation.core.resources.impl.RepositoryFactory;
 import org.molgenis.data.annotation.core.resources.impl.ResourceImpl;
 import org.molgenis.data.annotation.core.resources.impl.SingleResourceConfig;
 import org.molgenis.data.annotation.web.settings.SingleFileLocationCmdLineAnnotatorSettingsConfigurer;
+import org.molgenis.data.csv.service.CsvService;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
-import org.molgenis.data.meta.model.EntityTypeFactory;
+import org.molgenis.data.processor.TrimProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +51,7 @@ public class CGDAnnotator implements AnnotatorConfig
 {
 	public static final String NAME = "CGD";
 
-	private static String CGD_RESOURCE = "CGDResource";
+	private static final String CGD_RESOURCE = "CGDResource";
 	private static final char SEPARATOR = '\t';
 
 	// Output attribute labels
@@ -59,16 +61,16 @@ public class CGDAnnotator implements AnnotatorConfig
 	public static final String GENERALIZED_INHERITANCE_LABEL = "CGDGIN";
 
 	@Autowired
-	private Entity CGDAnnotatorSettings;
+	private Entity CgdAnnotatorSettings;
 
 	@Autowired
 	private DataService dataService;
 
 	@Autowired
-	private Resources resources;
+	private CsvService csvService;
 
 	@Autowired
-	private EntityTypeFactory entityTypeFactory;
+	private Resources resources;
 
 	@Autowired
 	private AttributeFactory attributeFactory;
@@ -150,13 +152,22 @@ public class CGDAnnotator implements AnnotatorConfig
 	@Bean
 	public Resource cgdResource()
 	{
-		return new ResourceImpl(CGD_RESOURCE, new SingleResourceConfig(CGD_LOCATION, CGDAnnotatorSettings))
+		return new ResourceImpl(CGD_RESOURCE, new SingleResourceConfig(CGD_LOCATION, CgdAnnotatorSettings))
 		{
 			@Override
 			public RepositoryFactory getRepositoryFactory()
 			{
-				return file -> new GeneCsvRepository(file, GENE.getCgdName(), GENE.getAttributeName(),
-						entityTypeFactory, attributeFactory, SEPARATOR);
+
+				return file ->
+				{
+					String repositoryName = csvService.createValidIdFromFileName(file.getName());
+					Map<String, List<String[]>> csvFiles = csvService.buildLinesFromFile(file, repositoryName,
+							SEPARATOR);
+					List<String> columns = csvService.parseHeader(csvFiles, repositoryName,
+							Lists.newArrayList(new TrimProcessor()));
+					return new GeneCsvRepository(csvFiles, columns, repositoryName, GENE.getCgdName(),
+							GENE.getAttributeName());
+				};
 			}
 		};
 
@@ -207,7 +218,7 @@ public class CGDAnnotator implements AnnotatorConfig
 				ResultFilter resultFilter, DataService dataService, Resources resources)
 		{
 			super(sourceRepositoryName, info, queryCreator, resultFilter, dataService, resources,
-					new SingleFileLocationCmdLineAnnotatorSettingsConfigurer(CGD_LOCATION, CGDAnnotatorSettings));
+					new SingleFileLocationCmdLineAnnotatorSettingsConfigurer(CGD_LOCATION, CgdAnnotatorSettings));
 		}
 
 		@Override

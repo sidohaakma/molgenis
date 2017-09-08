@@ -34,8 +34,8 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		FileCopyUtils.copy(in, new FileOutputStream(csvFile));
 
 		CsvRepositoryCollection repo = new CsvRepositoryCollection(csvFile);
-		repo.setEntityTypeFactory(entityTypeFactory);
-		repo.setAttributeFactory(attrMetaFactory);
+		//		repo.setEntityTypeFactory(entityTypeFactory);
+		//		repo.setAttributeFactory(attrMetaFactory);
 		assertNotNull(repo.getEntityTypeIds());
 		assertEquals(Iterables.size(repo.getEntityTypeIds()), 1);
 		assertEquals(Iterables.get(repo.getEntityTypeIds(), 0), "testdata");
@@ -84,8 +84,8 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		}
 
 		CsvRepositoryCollection repo = new CsvRepositoryCollection(zip);
-		repo.setEntityTypeFactory(entityTypeFactory);
-		repo.setAttributeFactory(attrMetaFactory);
+		//		repo.setEntityTypeFactory(entityTypeFactory);
+		//		repo.setAttributeFactory(attrMetaFactory);
 		assertNotNull(repo.getEntityTypeIds());
 		assertEquals(Iterables.size(repo.getEntityTypeIds()), 3);
 		assertNotNull(repo.getRepository("0"));
@@ -99,8 +99,8 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		File zipFile = createTmpFileForResource("zipFile.zip");
 
 		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
-		repo.setEntityTypeFactory(entityTypeFactory);
-		repo.setAttributeFactory(attrMetaFactory);
+		//		repo.setEntityTypeFactory(entityTypeFactory);
+		//		repo.setAttributeFactory(attrMetaFactory);
 		assertNotNull(repo.getRepository("testData"));
 
 	}
@@ -111,8 +111,8 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		File zipFile = createTmpFileForResource("zipFileWithFolder.zip");
 
 		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
-		repo.setEntityTypeFactory(entityTypeFactory);
-		repo.setAttributeFactory(attrMetaFactory);
+		//		repo.setEntityTypeFactory(entityTypeFactory);
+		//		repo.setAttributeFactory(attrMetaFactory);
 		assertNotNull(repo.getRepository("testData"));
 
 	}
@@ -123,8 +123,8 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		File zipFile = createTmpFileForResource("zipFileWithBom.zip");
 
 		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
-		repo.setEntityTypeFactory(entityTypeFactory);
-		repo.setAttributeFactory(attrMetaFactory);
+		//		repo.setEntityTypeFactory(entityTypeFactory);
+		//		repo.setAttributeFactory(attrMetaFactory);
 		assertNotNull(repo.getRepository("testDataWithBom"));
 	}
 
@@ -134,8 +134,8 @@ public class CsvRepositorySourceTest extends AbstractMolgenisSpringTest
 		File zipFile = createTmpFileForResource("zipFileWithFolderWithBom.zip");
 
 		CsvRepositoryCollection repo = new CsvRepositoryCollection(zipFile);
-		repo.setEntityTypeFactory(entityTypeFactory);
-		repo.setAttributeFactory(attrMetaFactory);
+		//		repo.setEntityTypeFactory(entityTypeFactory);
+		//		repo.setAttributeFactory(attrMetaFactory);
 		assertNotNull(repo.getRepository("testDataWithBom"));
 	}
 

@@ -34,11 +34,8 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 {
 	public static final String NAME = "EXCEL";
 
-	@Autowired
 	private ExcelService excelService;
-	@Autowired
 	private EntityTypeFactory entityTypeFactory;
-	@Autowired
 	private AttributeFactory attributeFactory;
 
 	private final File file;
@@ -139,12 +136,6 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Autowired
-	public void setExcelService(ExcelService excelService)
-	{
-		this.excelService = excelService;
-	}
-
-	@Autowired
 	public void setEntityTypeFactory(EntityTypeFactory entityTypeFactory)
 	{
 		this.entityTypeFactory = entityTypeFactory;
@@ -154,6 +145,12 @@ public class ExcelRepositoryCollection extends FileRepositoryCollection
 	public void setAttributeFactory(AttributeFactory attributeFactory)
 	{
 		this.attributeFactory = attributeFactory;
+	}
+
+	@Autowired
+	public void setExcelService(ExcelService excelService)
+	{
+		this.excelService = excelService;
 	}
 
 }

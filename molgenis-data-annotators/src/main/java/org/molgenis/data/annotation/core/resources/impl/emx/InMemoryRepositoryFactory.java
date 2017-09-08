@@ -2,6 +2,7 @@ package org.molgenis.data.annotation.core.resources.impl.emx;
 
 import com.google.common.collect.ImmutableMap;
 import org.molgenis.data.Entity;
+import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.annotation.core.resources.impl.RepositoryFactory;
 import org.molgenis.data.excel.ExcelRepositoryCollection;
@@ -57,7 +58,7 @@ public class InMemoryRepositoryFactory implements RepositoryFactory
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException(
+			throw new MolgenisDataException(
 					"Unable to create ExcelRepositoryCollection for file:" + file.getName() + " exception: " + e);
 		}
 
@@ -65,7 +66,7 @@ public class InMemoryRepositoryFactory implements RepositoryFactory
 														   .getEntityMap();
 		if (!entityMap.containsKey(id))
 		{
-			throw new RuntimeException("Entity [" + id + "] is not found. Entities found: " + entityMap.keySet());
+			throw new MolgenisDataException("Entity [" + id + "] is not found. Entities found: " + entityMap.keySet());
 		}
 
 		EntityType metaData = entityMap.get(id);

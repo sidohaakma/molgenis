@@ -3,21 +3,14 @@ package org.molgenis.data.csv;
 import com.google.common.collect.Iterables;
 import org.molgenis.data.Entity;
 import org.molgenis.data.RepositoryCapability;
-import org.molgenis.data.csv.service.CsvService;
-import org.molgenis.data.csv.service.CsvServiceImpl;
-import org.molgenis.data.meta.model.Attribute;
-import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
-import org.molgenis.data.meta.model.EntityTypeFactory;
 import org.molgenis.data.processor.CellProcessor;
 import org.molgenis.data.support.AbstractRepository;
+import org.molgenis.data.support.DynamicEntity;
 
-import javax.annotation.Nullable;
-import java.io.File;
 import java.util.*;
 
-import static java.util.Objects.requireNonNull;
-import static org.molgenis.data.meta.AttributeType.STRING;
+import static org.molgenis.data.processor.AbstractCellProcessor.processCell;
 
 /**
  * Repository implementation for csv files.
@@ -26,71 +19,31 @@ import static org.molgenis.data.meta.AttributeType.STRING;
  */
 public class CsvRepository extends AbstractRepository
 {
-	private final File file;
-	private final EntityTypeFactory entityTypeFactory;
-	private final AttributeFactory attrMetaFactory;
+	private final Map<String, List<String[]>> lines;
+	private final List<String> columns;
 	private final String repositoryName;
-	private List<CellProcessor> cellProcessors;
-	private EntityType entityType;
-	private Character separator = null;
+	private final EntityType entityType;
+	private final List<CellProcessor> processors;
 
-	private final CsvService csvService = new CsvServiceImpl();
-
-	public CsvRepository(String file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory)
+	public CsvRepository(Map<String, List<String[]>> lines, List<String> columns, String repositoryName,
+			EntityType entityType, List<CellProcessor> processors)
 	{
-		this(new File(file), entityTypeFactory, attrMetaFactory, null);
-	}
-
-	public CsvRepository(File file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
-			@Nullable List<CellProcessor> cellProcessors, Character separator)
-	{
-		this(file, entityTypeFactory, attrMetaFactory, "", null);
-		this.separator = separator;
-	}
-
-	public CsvRepository(File file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
-			@Nullable List<CellProcessor> cellProcessors)
-	{
-		this(file, entityTypeFactory, attrMetaFactory, "", null);
-	}
-
-	public CsvRepository(File file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory,
-			@Nullable String repositoryName, @Nullable List<CellProcessor> cellProcessors)
-	{
-		this.file = file;
-		this.entityTypeFactory = requireNonNull(entityTypeFactory);
-		this.attrMetaFactory = requireNonNull(attrMetaFactory);
-		this.repositoryName = repositoryName == null || repositoryName.isEmpty() ? csvService.createValidIdFromFileName(
-				file.getName()) : repositoryName;
-		this.cellProcessors = cellProcessors;
+		this.lines = Objects.requireNonNull(lines);
+		this.columns = Objects.requireNonNull(columns);
+		this.repositoryName = Objects.requireNonNull(repositoryName);
+		this.entityType = Objects.requireNonNull(entityType);
+		this.processors = Objects.requireNonNull(processors);
 	}
 
 	@Override
 	public Iterator<Entity> iterator()
 	{
-		return new CsvIterator(file, repositoryName, cellProcessors, separator, getEntityType());
+		return lines.get(repositoryName).stream().skip(1).map(this::toEntity).iterator();
 	}
 
 	public EntityType getEntityType()
 	{
-		if (entityType == null)
-		{
-			entityType = entityTypeFactory.create(repositoryName);
-
-			new CsvIterator(file, repositoryName, null, separator).getColNamesMap().keySet().forEach(attribute ->
-			{
-				Attribute attr = attrMetaFactory.create().setName(attribute).setDataType(STRING);
-				entityType.addAttribute(attr);
-			});
-		}
-
 		return entityType;
-	}
-
-	public void addCellProcessor(CellProcessor cellProcessor)
-	{
-		if (cellProcessors == null) cellProcessors = new ArrayList<>();
-		cellProcessors.add(cellProcessor);
 	}
 
 	@Override
@@ -103,6 +56,16 @@ public class CsvRepository extends AbstractRepository
 	public long count()
 	{
 		return Iterables.size(this);
+	}
+
+	private Entity toEntity(String[] row)
+	{
+		Entity entity = new DynamicEntity(entityType);
+		for (int index = 0; index < columns.size(); index++)
+		{
+			entity.set(columns.get(index), processCell(row[index], false, processors));
+		}
+		return entity;
 	}
 
 }

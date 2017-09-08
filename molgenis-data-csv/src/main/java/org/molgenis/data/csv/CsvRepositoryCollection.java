@@ -5,7 +5,6 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.csv.service.CsvService;
-import org.molgenis.data.csv.service.CsvServiceImpl;
 import org.molgenis.data.csv.utils.CsvFileExtensions;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
@@ -19,8 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
+import static org.molgenis.data.meta.AttributeType.STRING;
 import static org.molgenis.util.file.ZipFileUtil.unzip;
 
 /**
@@ -34,12 +35,13 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 	public static final String NAME = "CSV";
 	public static final String MAC_ZIP = "__MACOSX";
 	private final File file;
+
+	private CsvService csvService;
 	private EntityTypeFactory entityTypeFactory;
-	private AttributeFactory attrMetaFactory;
+	private AttributeFactory attributeFactory;
+
 	private List<String> entityTypeIds;
 	private List<String> entityTypeIdsLowerCase;
-
-	private CsvService csvService = new CsvServiceImpl();
 
 	public CsvRepositoryCollection(File file)
 	{
@@ -74,7 +76,9 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 			return null;
 		}
 
-		return new CsvRepository(file, entityTypeFactory, attrMetaFactory, id, cellProcessors);
+		Map<String, List<String[]>> repository = csvService.buildLinesFromFile(file, id);
+		List<String> columns = csvService.parseHeader(repository, id, cellProcessors);
+		return new CsvRepository(repository, columns, id, getEntityType(id, columns), cellProcessors);
 	}
 
 	private void loadEntityNames()
@@ -140,6 +144,17 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 		};
 	}
 
+	private EntityType getEntityType(String repositoryName, List<String> columns)
+	{
+		EntityType entityType = entityTypeFactory.create(repositoryName).setLabel(repositoryName);
+
+		columns.stream()
+			   .map(column -> attributeFactory.create().setName(column).setDataType(STRING))
+			   .forEach(entityType::addAttribute);
+
+		return entityType;
+	}
+
 	@Override
 	public boolean hasRepository(String name)
 	{
@@ -159,8 +174,14 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Autowired
-	public void setAttributeFactory(AttributeFactory attrMetaFactory)
+	public void setAttributeFactory(AttributeFactory attributeFactory)
 	{
-		this.attrMetaFactory = attrMetaFactory;
+		this.attributeFactory = attributeFactory;
+	}
+
+	@Autowired
+	private void setCsvService(CsvService csvService)
+	{
+		this.csvService = csvService;
 	}
 }

@@ -4,11 +4,12 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.molgenis.data.Entity;
+import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.csv.CsvWriter;
+import org.molgenis.data.csv.service.CsvService;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityTypeFactory;
@@ -35,11 +36,11 @@ import javax.servlet.http.Part;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.lang.String.format;
 import static org.molgenis.ontology.controller.SortaServiceAnonymousController.URI;
 import static org.molgenis.ontology.sorta.meta.OntologyTermHitMetaData.COMBINED_SCORE;
 import static org.molgenis.ontology.sorta.meta.OntologyTermHitMetaData.SCORE;
@@ -55,6 +56,9 @@ public class SortaServiceAnonymousController extends PluginController
 
 	@Autowired
 	private OntologyService ontologyService;
+
+	@Autowired
+	private CsvService csvService;
 
 	@Autowired
 	private FileStore fileStore;
@@ -84,7 +88,7 @@ public class SortaServiceAnonymousController extends PluginController
 	@RequestMapping(method = POST, value = "/match")
 	public String match(@RequestParam(value = "selectOntologies") String ontologyIri,
 			@RequestParam(value = "inputTerms") String inputTerms, HttpServletRequest httpServletRequest, Model model)
-			throws UnsupportedEncodingException, IOException
+			throws IOException
 	{
 		String fileName = httpServletRequest.getSession().getId() + "_input.txt";
 		File uploadFile = fileStore.store(new ByteArrayInputStream(inputTerms.getBytes("UTF8")), fileName);
@@ -97,7 +101,7 @@ public class SortaServiceAnonymousController extends PluginController
 	@RequestMapping(method = POST, value = "/match/upload")
 	public String upload(@RequestParam(value = "selectOntologies") String ontologyIri,
 			@RequestParam(value = "file") Part file, HttpServletRequest httpServletRequest, Model model)
-			throws UnsupportedEncodingException, IOException
+			throws IOException
 	{
 
 		String fileName = httpServletRequest.getSession().getId() + "_input.csv";
@@ -110,8 +114,7 @@ public class SortaServiceAnonymousController extends PluginController
 
 	@RequestMapping(method = GET, value = "/retrieve")
 	@ResponseBody
-	public List<Map<String, Object>> matchResult(HttpServletRequest httpServletRequest)
-			throws UnsupportedEncodingException, IOException
+	public List<Map<String, Object>> matchResult(HttpServletRequest httpServletRequest) throws IOException
 	{
 		Object filePath = httpServletRequest.getSession().getAttribute("filePath");
 		Object ontologyIriObject = httpServletRequest.getSession().getAttribute("ontologyIri");
@@ -120,7 +123,7 @@ public class SortaServiceAnonymousController extends PluginController
 		{
 			File uploadFile = new File(filePath.toString());
 			SortaCsvRepository csvRepository = new SortaCsvRepository(uploadFile.getName(), uploadFile.getName(),
-					uploadFile, entityTypeFactory, attrMetaFactory);
+					uploadFile, csvService);
 
 			if (validateUserInputHeader(csvRepository) && validateUserInputContent(csvRepository))
 			{
@@ -133,10 +136,8 @@ public class SortaServiceAnonymousController extends PluginController
 
 	@RequestMapping(method = GET, value = "/download")
 	public void download(HttpServletRequest httpServletRequest, HttpServletResponse response)
-			throws UnsupportedEncodingException, IOException
 	{
-		CsvWriter csvWriter = null;
-		try
+		try (CsvWriter csvWriter = new CsvWriter(response.getOutputStream(), SortaServiceImpl.DEFAULT_SEPARATOR))
 		{
 			response.setContentType("text/csv");
 			response.addHeader("Content-Disposition", "attachment; filename=" + generateCsvFileName("match-result"));
@@ -150,11 +151,9 @@ public class SortaServiceAnonymousController extends PluginController
 
 				String ontologyIri = ontologyIriObject.toString();
 				File uploadFile = new File(filePath.toString());
-				SortaCsvRepository csvRepository = new SortaCsvRepository(uploadFile, entityTypeFactory,
-						attrMetaFactory);
+				SortaCsvRepository csvRepository = new SortaCsvRepository(uploadFile, csvService);
 
 				List<String> columnHeaders = createDownloadTableHeaders(csvRepository);
-				csvWriter = new CsvWriter(response.getOutputStream(), SortaServiceImpl.DEFAULT_SEPARATOR);
 				csvWriter.writeAttributeNames(columnHeaders);
 
 				for (Entity inputEntity : csvRepository)
@@ -191,10 +190,12 @@ public class SortaServiceAnonymousController extends PluginController
 				}
 			}
 		}
-		finally
+		catch (IOException err)
 		{
-			if (csvWriter != null) IOUtils.closeQuietly(csvWriter);
+			throw new MolgenisDataException(
+					format("Could not write new CSV-file [%s]", generateCsvFileName("match-result")));
 		}
+
 	}
 
 	private List<String> createDownloadTableHeaders(SortaCsvRepository csvRepository)
@@ -226,7 +227,7 @@ public class SortaServiceAnonymousController extends PluginController
 	private void validateSortaInput(String ontologyIri, File uploadFile, HttpServletRequest httpServletRequest,
 			Model model)
 	{
-		SortaCsvRepository csvRepository = new SortaCsvRepository(uploadFile, entityTypeFactory, attrMetaFactory);
+		SortaCsvRepository csvRepository = new SortaCsvRepository(uploadFile, csvService);
 
 		HttpSession session = httpServletRequest.getSession();
 		session.setAttribute("filePath", uploadFile.getAbsoluteFile());

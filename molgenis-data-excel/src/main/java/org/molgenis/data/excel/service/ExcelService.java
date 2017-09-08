@@ -51,7 +51,9 @@ public interface ExcelService
 	 * @param file
 	 * @param index
 	 * @return
+	 * @deprecated <p>Was used in CsvIterator. Now not used anymore.</p>
 	 */
+	@Deprecated
 	String getSheetName(final File file, int index);
 
 	/**
@@ -69,17 +71,36 @@ public interface ExcelService
 
 	/**
 	 * <p>Gets a cell value as String and process the value with the given cellProcessors</p>
+	 *
+	 * @param cell Excel cell element
+	 * @return value from cell in String-format
 	 */
 	String toValue(Cell cell);
 
+	/**
+	 * <p>Parse the sheet header into columns.</p>
+	 *
+	 * @param sheet      sheet to parse
+	 * @param processors {@link CellProcessor}
+	 * @return list of columns
+	 */
 	List<String> parseHeader(Sheet sheet, List<CellProcessor> processors);
 
+	/**
+	 * <p>Parse an Excel-Row to a pair of integer and string values.</p>
+	 *
+	 * @param row        Excel Row element
+	 * @param processors {@link CellProcessor}
+	 * @return list of {@link Pair}
+	 */
 	List<Pair<Integer, String>> parse(Row row, List<CellProcessor> processors);
 
 	/**
 	 * @param file
 	 * @param out
+	 * @deprecated <p>Was used in CsvIterator. Now not used anymore.</p>
 	 */
+	@Deprecated
 	void save(final File file, OutputStream out);
 
 }

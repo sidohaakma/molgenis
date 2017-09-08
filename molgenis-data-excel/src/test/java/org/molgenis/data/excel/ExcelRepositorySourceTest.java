@@ -5,7 +5,6 @@ import org.molgenis.data.AbstractMolgenisSpringTest;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisInvalidFormatException;
 import org.molgenis.data.Repository;
-import org.molgenis.data.excel.service.ExcelServiceImpl;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityTypeFactory;
@@ -37,9 +36,6 @@ public class ExcelRepositorySourceTest extends AbstractMolgenisSpringTest
 	{
 		File file = ResourceUtils.getFile(getClass(), "/test-multiple-valid-sheets.xls");
 		excelRepositoryCollection = new ExcelRepositoryCollection(file);
-		excelRepositoryCollection.setExcelService(new ExcelServiceImpl());
-		excelRepositoryCollection.setAttributeFactory(attrMetaFactory);
-		excelRepositoryCollection.setEntityTypeFactory(entityTypeFactory);
 		excelRepositoryCollection.init();
 	}
 

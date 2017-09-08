@@ -3,10 +3,10 @@ package org.molgenis.ontology.sorta.repo;
 import org.molgenis.data.Entity;
 import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.csv.CsvRepository;
+import org.molgenis.data.csv.service.CsvService;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
-import org.molgenis.data.meta.model.EntityTypeFactory;
 import org.molgenis.data.processor.CellProcessor;
 import org.molgenis.data.processor.LowerCaseProcessor;
 import org.molgenis.data.processor.TrimProcessor;
@@ -29,25 +29,32 @@ public class SortaCsvRepository extends AbstractRepository
 	private final CsvRepository csvRepository;
 	private final String entityTypeId;
 	private final String entityLabel;
-	public final static String ALLOWED_IDENTIFIER = "Identifier";
-	private final static List<CellProcessor> LOWERCASE_AND_TRIM = Arrays.asList(new LowerCaseProcessor(),
+	public static final String ALLOWED_IDENTIFIER = "Identifier";
+	private static final List<CellProcessor> LOWERCASE_AND_TRIM = Arrays.asList(new LowerCaseProcessor(),
 			new TrimProcessor());
 
-	public SortaCsvRepository(File file, EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory)
+	public SortaCsvRepository(File file, CsvService csvService)
 	{
-		this.csvRepository = new CsvRepository(file, entityTypeFactory, attrMetaFactory, LOWERCASE_AND_TRIM,
-				SortaServiceImpl.DEFAULT_SEPARATOR);
+		this.csvRepository = createCsvRepository(file, csvService);
 		this.entityTypeId = file.getName();
 		this.entityLabel = file.getName();
 	}
 
-	public SortaCsvRepository(String entityTypeId, String entityLabel, File uploadedFile,
-			EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory)
+	public SortaCsvRepository(String entityTypeId, String entityLabel, File uploadedFile, CsvService csvService)
 	{
-		this.csvRepository = new CsvRepository(uploadedFile, entityTypeFactory, attrMetaFactory, LOWERCASE_AND_TRIM,
-				SortaServiceImpl.DEFAULT_SEPARATOR);
+		this.csvRepository = createCsvRepository(uploadedFile, csvService);
 		this.entityTypeId = entityTypeId;
 		this.entityLabel = entityLabel;
+	}
+
+	private CsvRepository createCsvRepository(File file, CsvService csvService)
+	{
+		String repositoryName = csvService.createValidIdFromFileName(file.getName());
+		Map<String, List<String[]>> csvFile = csvService.buildLinesFromFile(file, repositoryName,
+				SortaServiceImpl.DEFAULT_SEPARATOR);
+		List<String> columns = csvService.parseHeader(csvFile, repositoryName, LOWERCASE_AND_TRIM);
+		return new CsvRepository(csvFile, columns, repositoryName, getEntityType(), LOWERCASE_AND_TRIM);
+
 	}
 
 	public EntityType getEntityType()

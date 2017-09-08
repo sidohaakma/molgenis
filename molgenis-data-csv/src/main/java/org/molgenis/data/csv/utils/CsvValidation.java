@@ -32,11 +32,11 @@ public class CsvValidation
 		int headerLength = lines.get(0).length;
 		lines.forEach(row ->
 		{
-			if (row.length < headerLength)
+			if (row.length > headerLength)
 			{
 				throw new MolgenisDataException(
-						format("Column count [%s] is not greater or equal then header count [%s] (in CSV-file [%s])",
-								row.length, headerLength, fileName));
+						format("Column count [%s] is greater then header count [%s] (in CSV-file [%s])", row.length,
+								headerLength, fileName));
 			}
 		});
 	}

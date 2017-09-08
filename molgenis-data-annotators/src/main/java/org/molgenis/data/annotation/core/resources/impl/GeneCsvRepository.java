@@ -1,21 +1,17 @@
 package org.molgenis.data.annotation.core.resources.impl;
 
+import com.google.common.collect.Lists;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Query;
 import org.molgenis.data.QueryRule.Operator;
 import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.csv.CsvRepository;
-import org.molgenis.data.meta.model.AttributeFactory;
 import org.molgenis.data.meta.model.EntityType;
-import org.molgenis.data.meta.model.EntityTypeFactory;
+import org.molgenis.data.processor.TrimProcessor;
 import org.molgenis.data.support.AbstractRepository;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class GeneCsvRepository extends AbstractRepository
@@ -25,10 +21,12 @@ public class GeneCsvRepository extends AbstractRepository
 	private final String sourceAttributeName;
 	private final String targetAttributeName;
 
-	public GeneCsvRepository(File file, String sourceAttributeName, String targetAttributeName,
-			EntityTypeFactory entityTypeFactory, AttributeFactory attrMetaFactory, char separator)
+	public GeneCsvRepository(Map<String, List<String[]>> csvFiles, List<String> columns, String repositoryName,
+			String sourceAttributeName, String targetAttributeName)
 	{
-		this.repository = new CsvRepository(file, entityTypeFactory, attrMetaFactory, null, separator);
+
+		this.repository = new CsvRepository(csvFiles, columns, repositoryName, getEntityType(),
+				Lists.newArrayList(new TrimProcessor()));
 		this.sourceAttributeName = sourceAttributeName;
 		this.targetAttributeName = targetAttributeName;
 	}
