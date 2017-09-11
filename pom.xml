@@ -883,6 +883,7 @@
         <module>molgenis-data-vcf</module>
         <module>molgenis-data</module>
         <module>molgenis-dataexplorer</module>
+        <module>molgenis-datashield</module>
         <module>molgenis-fair</module>
         <module>molgenis-file-ingester</module>
         <module>molgenis-gavin</module>
