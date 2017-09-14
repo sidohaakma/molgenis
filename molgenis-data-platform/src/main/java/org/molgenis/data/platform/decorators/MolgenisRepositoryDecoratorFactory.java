@@ -55,8 +55,7 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 			IndexActionRegisterService indexActionRegisterService,
 			IndexedRepositoryDecoratorFactory indexedRepositoryDecoratorFactory, L1Cache l1Cache, L2Cache l2Cache,
 			TransactionInformation transactionInformation, EntityListenersService entityListenersService,
-			L3Cache l3Cache,
-			PlatformTransactionManager transactionManager, QueryValidator queryValidator,
+			L3Cache l3Cache, PlatformTransactionManager transactionManager, QueryValidator queryValidator,
 			EntityAclManager entityAclManager, PermissionService permissionService)
 
 	{
@@ -124,9 +123,14 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 		decoratedRepository = new RepositorySecurityDecorator(decoratedRepository, permissionService);
 
 		// 1.5
-		if (permissionService.isEntityLevelSecurity(repository.getEntityType()))
+		if (permissionService.isEntityLevelSecurity(repository.getEntityType()) || repository.getEntityType()
+																							 .getLabel()
+																							 .equals("dictionary"))
 		{
 			decoratedRepository = new EntitySecurityRepositoryDecorator(decoratedRepository, entityAclManager);
+			decoratedRepository = new RepositorySecurityQueryDecorator(decoratedRepository, entityAclManager,
+					dataService);
+
 		}
 
 		// 1. transaction decorator
