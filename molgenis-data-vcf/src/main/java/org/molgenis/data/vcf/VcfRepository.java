@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -31,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * The filename without the extension is considered to be the entityname
  */
-public class VcfRepository extends AbstractRepository
+public class VcfRepository extends AbstractRepository implements AutoCloseable
 {
 	private static final Logger LOG = LoggerFactory.getLogger(VcfRepository.class);
 	public static final String DEFAULT_ATTRIBUTE_DESCRIPTION = "Description not provided";
@@ -66,8 +65,8 @@ public class VcfRepository extends AbstractRepository
 
 	private VcfToEntity parseVcfMeta()
 	{
-		VcfReader reader = vcfReaderFactory.get();
-		try
+
+		try (VcfReader reader = vcfReaderFactory.get())
 		{
 			VcfMeta vcfMeta = reader.getVcfMeta();
 			return new VcfToEntity(entityTypeId, vcfMeta, vcfAttributes, entityTypeFactory, attrMetaFactory);
@@ -76,17 +75,6 @@ public class VcfRepository extends AbstractRepository
 		{
 			LOG.error("Failed to read VCF Metadata from file", e);
 			return null;
-		}
-		finally
-		{
-			try
-			{
-				reader.close();
-			}
-			catch (IOException e)
-			{
-				LOG.info("Failed to close VcfReader", e);
-			}
 		}
 	}
 
@@ -108,12 +96,6 @@ public class VcfRepository extends AbstractRepository
 	public EntityType getEntityType()
 	{
 		return vcfToEntitySupplier.get().getEntityType();
-	}
-
-	@Override
-	public void close() throws IOException
-	{
-		vcfReaderFactory.close();
 	}
 
 	@Override

@@ -9,7 +9,6 @@ import java.util.Iterator;
  *
  * @param <E>
  */
-public interface CloseableIterator<E> extends Iterator<E>
+public interface CloseableIterator<E> extends Iterator<E>, AutoCloseable
 {
-	void close();
 }

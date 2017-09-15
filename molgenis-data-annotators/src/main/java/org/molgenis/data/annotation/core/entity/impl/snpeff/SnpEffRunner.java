@@ -148,6 +148,7 @@ public class SnpEffRunner
 		}
 		catch (InterruptedException e)
 		{
+			Thread.currentThread().interrupt();
 			throw new MolgenisDataException("Exception running SnpEff", e);
 		}
 	}
