@@ -36,4 +36,14 @@ public class AclRule extends StaticEntity
 		set(AclRuleMetaData.ID, id);
 	}
 
+	public String getValue()
+	{
+		return getString(AclRuleMetaData.VALUE);
+	}
+
+	public String getAttribute()
+	{
+		return getString(AclRuleMetaData.ATTRIBUTE);
+	}
+
 }

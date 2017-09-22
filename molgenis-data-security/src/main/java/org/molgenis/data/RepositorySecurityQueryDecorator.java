@@ -1,5 +1,6 @@
 package org.molgenis.data;
 
+import org.apache.commons.lang3.StringUtils;
 import org.molgenis.data.model.AclRule;
 import org.molgenis.data.model.AclRuleMetaData;
 import org.molgenis.data.security.acl.*;
@@ -81,7 +82,6 @@ public class RepositorySecurityQueryDecorator extends AbstractRepositoryDecorato
 
 	private boolean matches(AclRule aclRule, Entity entity)
 	{
-		return entity.getString(aclRule.getString(AclRuleMetaData.ATTRIBUTE))
-					 .equals(aclRule.getString(AclRuleMetaData.VALUE));
+		return StringUtils.equals(entity.getString(aclRule.getAttribute()), aclRule.getValue());
 	}
 }
