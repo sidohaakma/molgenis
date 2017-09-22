@@ -10,9 +10,9 @@ import static org.molgenis.data.meta.model.Package.PACKAGE_SEPARATOR;
 @Component
 public class GenomeBrowserAttributesMetadata extends SystemEntityType
 {
-	public static final String SIMPLE_NAME = "GenomeBrowserAttributesMetadata";
+	public static final String SIMPLE_NAME = "GenomeBrowserAttributesMetaData";
 
-	public static final String GENOMEBROWSERATTRIBUTES =
+	public static final String GENOME_BROWSER_ATTRIBUTES =
 			GenomeBrowserPackage.PACKAGE_GENOME_BROWSER + PACKAGE_SEPARATOR + SIMPLE_NAME;
 
 	public static final String IDENTIFIER = "id";

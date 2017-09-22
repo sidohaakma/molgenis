@@ -16,8 +16,8 @@ import static org.molgenis.data.meta.model.Package.PACKAGE_SEPARATOR;
 @Component
 public class GenomeBrowserSettingsMetadata extends SystemEntityType
 {
-	public static final String SIMPLE_NAME = "GenomeBrowserSettingsMetadata";
-	public static final String GENOMEBROWSERSETTINGS =
+	public static final String SIMPLE_NAME = "GenomeBrowserSettingsMetaData";
+	public static final String GENOME_BROWSER_SETTINGS =
 			GenomeBrowserPackage.PACKAGE_GENOME_BROWSER + PACKAGE_SEPARATOR + SIMPLE_NAME;
 	public static final String IDENTIFIER = "id";
 	public static final String LABEL = "label";
@@ -43,12 +43,12 @@ public class GenomeBrowserSettingsMetadata extends SystemEntityType
 	private GenomeBrowserAttributesMetadata genomeBrowserAttributesMetadata;
 
 	public GenomeBrowserSettingsMetadata(AttributeMetadata attributeMetadata, EntityTypeMetadata entityTypeMetadata,
-			GenomeBrowserAttributesMetadata genomeBrowserAttributesMetadata)
+			GenomeBrowserAttributesMetadata genomeBrowserAttributes)
 	{
 		super(SIMPLE_NAME, GenomeBrowserPackage.PACKAGE_GENOME_BROWSER);
 		this.entityTypeMetadata = requireNonNull(entityTypeMetadata);
 		this.attributeMetadata = requireNonNull(attributeMetadata);
-		this.genomeBrowserAttributesMetadata = requireNonNull(genomeBrowserAttributesMetadata);
+		this.genomeBrowserAttributesMetadata = requireNonNull(genomeBrowserAttributes);
 	}
 
 	@Override

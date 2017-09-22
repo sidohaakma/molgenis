@@ -21,13 +21,13 @@ public class GenomeBrowserAttributesPopulator
 
 	public void populate()
 	{
-		dataService.add(GenomeBrowserAttributesMetadata.GENOMEBROWSERATTRIBUTES,
+		dataService.add(GenomeBrowserAttributesMetadata.GENOME_BROWSER_ATTRIBUTES,
 				gbaFactory.create("simple1", true, 0, "start", "chr", null, null, null));
-		dataService.add(GenomeBrowserAttributesMetadata.GENOMEBROWSERATTRIBUTES,
+		dataService.add(GenomeBrowserAttributesMetadata.GENOME_BROWSER_ATTRIBUTES,
 				gbaFactory.create("VCF", true, 1, "POS", "#CHROM", "REF", "ALT", null));
-		dataService.add(GenomeBrowserAttributesMetadata.GENOMEBROWSERATTRIBUTES,
+		dataService.add(GenomeBrowserAttributesMetadata.GENOME_BROWSER_ATTRIBUTES,
 				gbaFactory.create("full", true, 2, "start", "chr", "ref", "alt", "stop"));
-		dataService.add(GenomeBrowserAttributesMetadata.GENOMEBROWSERATTRIBUTES,
+		dataService.add(GenomeBrowserAttributesMetadata.GENOME_BROWSER_ATTRIBUTES,
 				gbaFactory.create("simple2", true, 3, "POS", "#CHROM", null, null, null));
 	}
 }

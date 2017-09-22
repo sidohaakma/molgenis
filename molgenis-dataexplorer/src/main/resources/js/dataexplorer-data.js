@@ -137,6 +137,9 @@
      */
     function doShowGenomeBrowser() {
         // dalliance is not compatible with IE9
+        console.log(genomebrowserStartAttribute)
+        console.log(genomebrowserChromosomeAttribute)
+        console.log(molgenis.dataexplorer.settings["data_genome_browser"])
         return molgenis.ie9 !== true && genomebrowserStartAttribute !== undefined && genomebrowserChromosomeAttribute !== undefined && molgenis.dataexplorer.settings["data_genome_browser"] !== false;
     }
 

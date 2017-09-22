@@ -90,7 +90,7 @@ public class GenomeBrowserServiceTest
 
 		GenomeBrowserAttributes attrs1 = getGenomeBrowserAttributes("pos", "chr", "ref", "alt");
 		GenomeBrowserAttributes attrs2 = getGenomeBrowserAttributes("POS", "CHROM", null, null);
-		when(dataService.findAll(GenomeBrowserAttributesMetadata.GENOMEBROWSERATTRIBUTES,
+		when(dataService.findAll(GenomeBrowserAttributesMetadata.GENOME_BROWSER_ATTRIBUTES,
 				new QueryImpl<GenomeBrowserAttributes>().eq(GenomeBrowserAttributesMetadata.DEFAULT, true),
 				GenomeBrowserAttributes.class)).thenReturn(Stream.of(attrs1, attrs2));
 

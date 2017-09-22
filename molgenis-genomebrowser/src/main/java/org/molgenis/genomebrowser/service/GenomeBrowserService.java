@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
-import static org.molgenis.genomebrowser.meta.GenomeBrowserSettingsMetadata.GENOMEBROWSERSETTINGS;
+import static org.molgenis.genomebrowser.meta.GenomeBrowserSettingsMetadata.GENOME_BROWSER_SETTINGS;
 
 /**
  * Service implements genomeBrowser specific business logic.
@@ -44,7 +44,7 @@ public class GenomeBrowserService
 			List<GenomeBrowserAttributes> defaultGenomeBrowserAttributes)
 	{
 		Map<String, GenomeBrowserTrack> settings = new HashMap<>();
-		dataService.findAll(GENOMEBROWSERSETTINGS,
+		dataService.findAll(GENOME_BROWSER_SETTINGS,
 				new QueryImpl<GenomeBrowserSettings>().eq(GenomeBrowserSettingsMetadata.ENTITY,
 						entityType.getIdValue()), GenomeBrowserSettings.class)
 				   .forEach(referenceSettings -> settings.put(referenceSettings.getIdentifier(),
@@ -103,7 +103,7 @@ public class GenomeBrowserService
 
 	private Stream<GenomeBrowserAttributes> getDefaultGenomeBrowserAttributes()
 	{
-		return dataService.findAll(GenomeBrowserAttributesMetadata.GENOMEBROWSERATTRIBUTES,
+		return dataService.findAll(GenomeBrowserAttributesMetadata.GENOME_BROWSER_ATTRIBUTES,
 				new QueryImpl<GenomeBrowserAttributes>().eq(GenomeBrowserAttributesMetadata.DEFAULT, true),
 				GenomeBrowserAttributes.class);
 	}
