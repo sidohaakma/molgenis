@@ -12,7 +12,6 @@ import org.molgenis.integrationtest.sorta.SortaTestConfig;
 import org.molgenis.integrationtest.util.UtilTestConfig;
 import org.molgenis.integrationtest.utils.AbstractMolgenisIntegrationTests;
 import org.molgenis.ontology.core.config.OntologyTestConfig;
-import org.molgenis.ontology.core.meta.OntologyMetaData;
 import org.molgenis.ontology.sorta.controller.SortaController;
 import org.molgenis.ontology.sorta.request.SortaServiceRequest;
 import org.molgenis.util.ResourceUtils;
@@ -59,7 +58,7 @@ public class SortaControllerIT extends AbstractMolgenisIntegrationTests
 
 	public void beforeMethod()
 	{
-		sortaITUtils.addUserIfExists(SUPERUSER_NAME);
+		sortaITUtils.addUserUnlessExists(SUPERUSER_NAME);
 		appSettings.setMenu(
 				"{\"type\":\"menu\",\"id\":\"main\",\"label\":\"Home\",\"items\":[{\"type\":\"plugin\",\"id\":\"sortaservice\",\"label\":\"SORTA\",\"params\":\"\"}]}");
 	}
@@ -159,7 +158,7 @@ public class SortaControllerIT extends AbstractMolgenisIntegrationTests
 
 	@Test(groups = "withData", dependsOnMethods = "testUploadFile")
 	@WithMockUser(username = SUPERUSER_NAME, roles = SUPERUSER_ROLE)
-	public void testMathEntity() throws Exception
+	public void testMatchEntity() throws Exception
 	{
 
 		Map<String, Object> request = new HashMap<>();
@@ -203,7 +202,7 @@ public class SortaControllerIT extends AbstractMolgenisIntegrationTests
 			   .andExpect(status().isOk())
 			   .andExpect(view().name(MATCH_VIEW_NAME));
 	}
-	
+
 	public void afterClass()
 	{
 		sortaITUtils.cleanUp();
