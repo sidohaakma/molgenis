@@ -3,7 +3,6 @@ package org.molgenis.ui;
 import com.google.common.collect.Maps;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.molgenis.data.DataService;
 import org.molgenis.data.convert.StringToDateConverter;
 import org.molgenis.data.convert.StringToDateTimeConverter;
 import org.molgenis.data.i18n.LanguageService;
@@ -69,9 +68,6 @@ import static org.molgenis.ui.FileStoreConstants.FILE_STORE_PLUGIN_APPS_PATH;
 public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 {
 	private static final String MOLGENIS_HOME = "molgenis.home";
-
-	@Autowired
-	private DataService dataService;
 
 	@Autowired
 	private AppSettings appSettings;
