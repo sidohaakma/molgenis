@@ -97,7 +97,7 @@ Add for all R-packages remote repositories on Github.
 
 Use ```git init``` in R-packages and add the remote repositories ```git remote add origin https://github.com/#name#/#RPackage#```.
 
-## Releasing an R-package
+## Troubleshooting when releasing an R-package
 
 To release you have to make sure all warnings are removed during the build.
 
