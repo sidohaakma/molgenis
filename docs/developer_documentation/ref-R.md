@@ -29,6 +29,10 @@ install.packages("devtools")
 install.packages("roxygen2")
 ```
 
+### Styleguide
+
+Check: [R-styleguide](https://google.github.io/styleguide/Rguide.xml)
+
 ### Create documentation
 
 Add documentation to your .R files. Example documentation is shown below.
