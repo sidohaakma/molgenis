@@ -1,219 +1,148 @@
-** 
-The MOLGENIS R API client allows you to retrieve, create, update and delete entities from within the [R](http://r-project.org) environment.
-**
+# MOLGENIS R development
+This will help you setup R-Studio to create a new R-pacakge and release it on CRAN.
 
-Just add 
+There are a number of R-clients for MOLGENIS. You can also develop clients yourself.
+
+## Creating MOLGENIS R-packages
+To create a new R-package in R-Studio you need to follow the guidelines below.
+
+- Click on "File --> New project"
+
+![create new project](../images/r/project/createnewproject.png "Create a new project")
+
+- Choose a location for your project --> "New directory"
+
+![choose location](../images/r/project/dirchoice.png "Choose a location")
+
+- Choose the kind of project --> "Create a new package"
+
+![project configuration](../images/r/project/projectchoice.png "Choose a project configuration")
+
+- Configure the package which you want to build
+
+![package configuration](../images/r/project/packageconfig.png "Configure the package you want to create")
+
+- Install DEV-tools
+
+```r
+install.packages("devtools")
+install.packages("roxygen2")
 ```
-source("http://molgenis.mydomain.example/molgenis.R")
-``` 
-at the top of your script and you can connect to a MOLGENIS server. Typically the first thing you do is login and the last thing is logout.
+
+### Create documentation
 
-NOTE: For https connections use 
-```
-eval(expr = parse(text = getURL("https://molgenis.mydomain.example/molgenis.R?molgenis-token=${molgenisToken}")))
-```  
+Add documentation to your .R files. Example documentation is shown below.
 
-# Overview example
-
-```
-source("http://molgenis.mydomain.example/molgenis.R")
-
-
-molgenis.login("admin", "admin")
-
-df <- molgenis.get("celiacsprue", 
-                   q = "celiac_weight>80 and celiac_height>180",
-                   num = 1000,
-                   attributes = c("celiac_weight", "celiac_height", "celiac_gender"))
-                   
-plot(df$Celiac_Height ~ df$Celiac_Weight, col=df$Celiac_Gender)
-
-molgenis.logout()
-```
-
-# Methods
-## login
-```
-molgenis.login(username,password)
-```
-Login to the MOLGENIS REST API
-
-## logout
-```
-molgenis.logout()
-```
-Logout from the MOLGENIS REST API and destroy the session.
-
-##get
-```
-molgenis.get (entity, q = NULL, start = 0, num = 1000, attributes = NULL)
-```
-
-Retrieves entities and returns the result in a dataframe.
-
-Parameter   | Description                                       | Required | Default
-------------|---------------------------------------------------|----------|--------
-`entity`    | The entity name                                   | yes      |
-`q`         | Query string in rsql/fiql format (see below)      | No       | NULL
-`start`	    | The index of the thirst row to return             | No       | 0
-`num`       | The maximum number of rows to return (max 10000) | No       | 1000
-`attributes`| Vector of attributenames(columns) to return       | No       | All attributes
-`sortColumn`| attributeName of the column to sort on            | No       | NULL
-`sortOrder` | sort order, 'ASC' of 'DESC'                       | No       | NULL
-
-
-**Supported RSQL/FIQL query operators (see [https://github.com/jirutka/rsql-parser](https://github.com/jirutka/rsql-parser))**
-
-Operator|Symbol
---------|------
-Logical AND | `;` or `and`
-Logical OR	| `,` or `or`
-Group | `(` and `)`
-Equal to | `==`
-Less then | `=lt=` or `<`
-Less then or equal to | `=le=` or `<=`
-Greater than | `=gt=` or `>`
-Greater tha or equal to | `=ge=` or `>=`
-
-Argument can be a single value, or multiple values in parenthesis separated by comma. Value that doesn’t contain any reserved character or a white space can be unquoted, other arguments must be enclosed in single or double quotes.			
-			
-**Examples**
-
-```
-molgenis.get("celiacsprue")
-molgenis.get("celiacsprue", num = 100000, start = 1000)
-molgenis.get("celiacsprue", attributes = c("Individual", "celiac_gender"))
-molgenis.get("celiacsprue", q = "(celiac_weight>=80 and celiac_height<180) or (celiac_gender==Female)")
-molgenis.get("celiacsprue", q = "(celiac_weight>=80;celiac_height<180),(celiac_gender==Female)")
-
+```r
+#' Updates an existing entity
+#'
+#' @param entity the entityname
+#' @param id the id of the entity to update
+#'   ...: var arg list of attribute name/value pairs
+#'
+#' @examples: molgenis.update(entity = "Person", id = 5, firstName = "Piet", lastName = "Paulusma")
+#'
+#' @return an entity
+#' 
+#' @importFrom httr POST (document the methods for release purposes)
+#'
+#' @export (make it a public method, usable for the end-user) 
+#'
 ```
 
-<br />
-## add
-```
-molgenis.add(entity, ...)
-```
-
-Creates a new instance of an entity (i.e. a new row of the entity data table) and returns the id.
-
-Parameter|Description|Required
----------|-----------|--------
-entity| The entity name of the entity to create|yes
-...| Var arg list of attribute names and values|yes
-
-**Example**
-
-```
-id <- molgenis.add(entity = "Person", firstName = "Piet", lastName = "Paulusma")
+Execute the following command:
+```r 
+devtools::document()
 ```
 
-## addAll
-```
-molgenis.addAll(entity, rows)
-```
+This will create documentation file in #RProject/#/man/
 
-Creates new instances of an entity (i.e. adds new rows to the entity data table) and returns the ids.
+Now you are ready to build your first R-package.
 
-Parameter|Description|Required
----------|-----------|--------
-entity| The entity name of the entity to create|yes
-rows| data frame where each row represents an entity instance|yes
+### Build a package
+R-Studio is used to build the packages. 
 
-**Example**
+Configure the "Build tools".
 
-```
-firstName <- c("Piet", "Paulusma")
-lastName <- c("Klaas", "de Vries")
-df <- data.frame(firstName, lastName)
+![build menu](../images/r/build/menuitem.png "Build menu")
 
-molgenis.addAll("Person", df)
-```
+Assign a working directory (#RPackage#)
 
-<br />
-## update
-```
-molgenis.update(entity, id, ...)
-```
+![configure build tools](../images/r/build/buildtools.png "Configure build tools")
 
-Updates un existing entity
+Click on "Build and reload" on the right side of the screen
 
-Parameter|Description|Required
----------|-----------|--------
-entity| The entity name|yes
-id| The id of the entity|Yes
-...| Var arg list of attribute names and values|yes
+![build and reload](../images/r/build/buildandreload.png "Build and reload")
 
-**Example**
 
-```
-molgenis.update(entity = "Person", id = 8, firstName = "Pietje", lastName = "Paulusma")
+### Installing the package
+You can install the R-package via Github when you have loaded the devtools-package (see above). Just run:
+
+```r
+install_github("#username#/#repo#")
 ```
 
-## delete
-```
-molgenis.delete(entity, id)
-```
+**Example:**
 
-Deletes an entity.
-
-Parameter|Description|Required
----------|-----------|--------
-entity| The entity name|yes
-id| The id of the entity|Yes
-
-**Example**
-
-```
-molgenis.delete(entity = "Person", id = 8)
+```r
+install_github("sidohaakma/molgenis-client-r-spss")
 ```
 
-## deleteList
-```
-molgenis.deleteList(entity, c("id1", "id2"))
-```
+### Setup version control
+Add for all R-packages remote repositories on Github.
 
-Deletes a list of entities in an entityType.
+Use ```git init``` in R-packages and add the remote repositories ```git remote add origin https://github.com/#name#/#RPackage#```.
 
-Parameter|Description|Required
----------|-----------|--------
-entity| The entityType name|yes
-rows| List with ids of the rows|yes
+## Releasing an R-package
 
-**Example**
+To release you have to make sure all warnings are removed during the build.
 
-```
-molgenis.deleteList(entity = "Person", rows = c("1", "2", "3"))
-```
+### Set right locale 
+Sometimes the locale is not set correctly in R-Studio. You can set is right by setting an environment variable in the console.
 
-## getEntityMetaData
-```
-molgenis.getEntityMetaData(entity)
+- Enter in your R-terminal
+
+```r
+Sys.setenv(TZ="Europe/Amsterdam")
 ```
 
-Gets the entity metadata as list.
+This will prevent this warning:
 
-**Example**
-
-```
-meta <- molgenis.getEntityMetaData("celiacsprue")
-meta$label
+```r
+Warning in as.POSIXlt.POSIXct(x, tz) : unknown timezone 'zone/tz/2017c.1.0/zoneinfo/Europe/Amsterdam'
 ```
 
-## getAttributeMetaData
+### Set the right encoding
+Sometimes the encoding of R-Studio is not set correctly. You can set this right by toggle a setting in the "Global settings". 
+
+Go to "Tools --> Global options"
+
+![Tools](../../images/r/release/menubar.png)
+
+![Global options](../../images/r/release/globaloptions.png)
+
+
+Go to "Code --> Saving"
+
+![Code option](../../images/r/release/code.png)
+
+Set UTF-8 in encoding field. This will prevent
+
 ```
-molgenis.getAttributeMetaData(entity, attribute)
+Warning messages: 
+  Setting LC_CTYPE failed, using "C" 
+  Setting LC_COLLATE failed, using "C" 
+  Setting LC_TIME failed, using "C" 
+  Setting LC_MESSAGES failed, using "C" 
+  Setting LC_MONETARY failed, using "C" 
 ```
 
-Gets attribute metadata as list.
+### Expose use methods in NAMESPACE
+To get rid of NOTE's in the "check-phase" of the build you have to add exposure tags in the documentation. You can do this by adding:
 
-Parameter|Description|Required
----------|-----------|--------
-entity| The entity name|yes
-attribute| The name of the attribute|Yes
-
-**Example**
-
+```r
+@importFrom #package# #method1# #method2# #method3# #method4#
+@importFrom #package# #method5# #method6# etc..
 ```
-attr <- molgenis.getAttributeMetaData(entity = "celiacsprue", attribute = "celiac_gender")
-attr$fieldType
-```
+
+You can add upto 4 methods per line. Then run ```devtools::document()``` to write the new NAMESPACE-file.
