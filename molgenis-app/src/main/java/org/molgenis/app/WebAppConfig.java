@@ -1,5 +1,6 @@
 package org.molgenis.app;
 
+import org.molgenis.app.config.PropertiesConfig;
 import org.molgenis.core.ui.MolgenisWebAppConfig;
 import org.molgenis.core.ui.data.config.HttpClientConfig;
 import org.molgenis.core.ui.freemarker.RepositoryTemplateLoader;
@@ -23,8 +24,8 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 @EnableWebMvc
 @EnableAsync
 @ComponentScan(basePackages = "org.molgenis")
-@Import({ WebAppSecurityConfig.class, DatabaseConfig.class, HttpClientConfig.class, ElasticsearchConfig.class,
-		GsonConfig.class })
+@Import({ WebAppSecurityConfig.class, DatabaseConfig.class, PropertiesConfig.class, HttpClientConfig.class,
+		ElasticsearchConfig.class, GsonConfig.class })
 public class WebAppConfig extends MolgenisWebAppConfig
 {
 	@Autowired

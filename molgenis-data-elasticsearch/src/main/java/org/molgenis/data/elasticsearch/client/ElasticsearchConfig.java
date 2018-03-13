@@ -1,6 +1,8 @@
 package org.molgenis.data.elasticsearch.client;
 
 import org.molgenis.data.index.IndexConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +28,8 @@ import static java.util.stream.Collectors.toList;
 @Import({ IndexConfig.class, ConnectionRetryConfig.class })
 public class ElasticsearchConfig
 {
+	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchConfig.class);
+
 	@Value("${elasticsearch.cluster.name:molgenis}")
 	private String clusterName;
 
@@ -57,6 +61,14 @@ public class ElasticsearchConfig
 		{
 			throw new IllegalArgumentException("Property 'elasticsearch.transport.addresses' cannot be null or empty");
 		}
+
+		LOG.info("********************************************************");
+		LOG.info(" Elasticsearch configuration");
+		LOG.info(" ------------------------------------------------------");
+		LOG.info(" elasticsearch.cluster.name        : {}", clusterName);
+		LOG.info(" elasticsearch.transport.addresses : {}", transportAddresses);
+		LOG.info("********************************************************");
+
 		return new ClientFactory(retryTemplate, clusterName, toIpSocketAddresses(transportAddresses),
 				new PreBuiltTransportClientFactory());
 	}

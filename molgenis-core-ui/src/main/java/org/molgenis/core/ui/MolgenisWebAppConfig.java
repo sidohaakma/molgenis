@@ -37,10 +37,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -73,7 +69,7 @@ import static org.molgenis.security.UriConstants.PATH_SEGMENT_APPS;
 @Import({ PlatformConfig.class, RdfConverter.class })
 public abstract class MolgenisWebAppConfig implements WebMvcConfigurer
 {
-	private static final String MOLGENIS_HOME = "molgenis.home";
+	public static final String MOLGENIS_HOME = "molgenis.home";
 
 	@Autowired
 	private DataService dataService;
@@ -235,21 +231,6 @@ public abstract class MolgenisWebAppConfig implements WebMvcConfigurer
 	public PluginInterceptor molgenisPluginInterceptor()
 	{
 		return new PluginInterceptor(molgenisUi(), permissionService);
-	}
-
-	@Bean
-	public static PropertySourcesPlaceholderConfigurer properties()
-	{
-		PropertySourcesPlaceholderConfigurer pspc = new PropertySourcesPlaceholderConfigurer();
-		Resource[] resources = new Resource[] {
-				new FileSystemResource(System.getProperty(MOLGENIS_HOME) + "/molgenis-server.properties"),
-				new ClassPathResource("/molgenis.properties") };
-		pspc.setLocations(resources);
-		pspc.setFileEncoding("UTF-8");
-		pspc.setIgnoreUnresolvablePlaceholders(true);
-		pspc.setIgnoreResourceNotFound(true);
-		pspc.setNullValue("@null");
-		return pspc;
 	}
 
 	@Bean

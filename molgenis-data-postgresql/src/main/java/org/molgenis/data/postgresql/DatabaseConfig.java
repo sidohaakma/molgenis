@@ -27,6 +27,7 @@ import java.util.Properties;
 @Import(DataSourceConfig.class)
 public class DatabaseConfig implements TransactionManagementConfigurer
 {
+
 	/**
 	 * Max pool size must be <= the maximum number of connections of configured in the DBMS (e.g. PostgreSQL).
 	 * The magic number is based on PostgreSQL default max connections = 100 minus 5 connections for admin tools
@@ -52,12 +53,24 @@ public class DatabaseConfig implements TransactionManagementConfigurer
 	@Bean
 	public DataSource dataSource()
 	{
-		if (dbDriverClass == null) throw new IllegalArgumentException("db_driver is null");
-		if (dbJdbcUri == null) throw new IllegalArgumentException("db_uri is null");
-		if (dbUser == null) throw new IllegalArgumentException(
-				"please configure the db_user property in your molgenis-server.properties");
-		if (dbPassword == null) throw new IllegalArgumentException(
-				"please configure the db_password property in your molgenis-server.properties");
+		if (dbDriverClass == null)
+		{
+			throw new IllegalArgumentException("db_driver is null");
+		}
+		if (dbJdbcUri == null)
+		{
+			throw new IllegalArgumentException("db_uri is null");
+		}
+		if (dbUser == null)
+		{
+			throw new IllegalArgumentException(
+					"please configure the db_user property in your molgenis-server.properties");
+		}
+		if (dbPassword == null)
+		{
+			throw new IllegalArgumentException(
+					"please configure the db_password property in your molgenis-server.properties");
+		}
 
 		ComboPooledDataSource dataSource = new ComboPooledDataSource();
 		try

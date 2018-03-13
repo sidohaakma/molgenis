@@ -1,6 +1,8 @@
 package org.molgenis.data.config;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,8 @@ import java.util.Properties;
 @Configuration
 public class DataSourceConfig
 {
+	private static final Logger LOG = LoggerFactory.getLogger(DataSourceConfig.class);
+
 	/**
 	 * Max pool size must be <= the maximum number of connections of configured in the DBMS (e.g. PostgreSQL).
 	 * The magic number is based on PostgreSQL default max connections = 100 minus 5 connections for admin tools
@@ -34,12 +38,32 @@ public class DataSourceConfig
 	@Bean
 	public DataSource dataSource()
 	{
-		if (dbDriverClass == null) throw new IllegalArgumentException("db_driver is null");
-		if (dbJdbcUri == null) throw new IllegalArgumentException("db_uri is null");
-		if (dbUser == null) throw new IllegalArgumentException(
-				"please configure the db_user property in your molgenis-server.properties");
-		if (dbPassword == null) throw new IllegalArgumentException(
-				"please configure the db_password property in your molgenis-server.properties");
+		if (dbDriverClass == null)
+		{
+			throw new IllegalArgumentException("db_driver is null");
+		}
+		if (dbJdbcUri == null)
+		{
+			throw new IllegalArgumentException("db_uri is null");
+		}
+
+		LOG.info("**************************************************");
+		LOG.info(" Database configuration");
+		LOG.info(" ------------------------------------------------");
+		LOG.info(" db_driver : {}", dbDriverClass);
+		LOG.info(" db_url    : {}", dbJdbcUri);
+		LOG.info("**************************************************");
+
+		if (dbUser == null)
+		{
+			throw new IllegalArgumentException(
+					"please configure the db_user property in your molgenis-server.properties");
+		}
+		if (dbPassword == null)
+		{
+			throw new IllegalArgumentException(
+					"please configure the db_password property in your molgenis-server.properties");
+		}
 
 		ComboPooledDataSource dataSource = new ComboPooledDataSource();
 		try
