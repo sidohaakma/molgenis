@@ -216,36 +216,6 @@ public class AppManagerServiceTest
 	}
 
 	@Test
-	public void testCheckAndObtainConfig() throws IOException
-	{
-		String tempDir = "temp";
-		InputStream configFile = AppManagerServiceTest.class.getResource("/config.json").openStream();
-		String configContent = IOUtils.toString(configFile, UTF_8);
-
-		appManagerService.checkAndObtainConfig(tempDir, configContent);
-
-		verify(fileStore).move(tempDir, "example2");
-	}
-
-	@Test
-	public void testConfigureApp()
-	{
-		when(appFactory.create()).thenReturn(app);
-
-		AppConfig appConfig = mock(AppConfig.class);
-		when(appConfig.getLabel()).thenReturn("test-app");
-		when(appConfig.getDescription()).thenReturn("Test app description");
-		when(appConfig.getIncludeMenuAndFooter()).thenReturn(true);
-		when(appConfig.getVersion()).thenReturn("1.0");
-		when(appConfig.getUri()).thenReturn("test-app-uri");
-		when(appConfig.getApiDependency()).thenReturn("v2.0");
-
-		appManagerService.configureApp(appConfig, "<h1>Test</h1>");
-
-		verify(dataService).add(AppMetadata.APP, app);
-	}
-
-	@Test
 	public void testUploadAppEmptyRuntimeOptions() throws URISyntaxException, IOException, ZipException
 	{
 		URL url = AppManagerServiceTest.class.getResource("/valid-no-runtime-app.zip");
@@ -303,16 +273,56 @@ public class AppManagerServiceTest
 		appManagerService.uploadApp(zipData, fileName, "app");
 	}
 
+	@Test
+	public void testCheckAndObtainConfig() throws IOException
+	{
+		String tempDir = "temp";
+		InputStream configFile = AppManagerServiceTest.class.getResource("/config.json").openStream();
+		String configContent = IOUtils.toString(configFile, UTF_8);
+
+		appManagerService.checkAndObtainConfig(tempDir, configContent);
+
+		verify(fileStore).move(tempDir, "example2");
+	}
+
 	@Test(expectedExceptions = InvalidAppConfigException.class)
-	public void testUploadAppInvalidJsonConfigFile() throws IOException
+	public void testCheckAndObtainConfigInvalidJsonConfigFile() throws IOException
 	{
 		appManagerService.checkAndObtainConfig("tempDir", "");
 	}
 
 	@Test(expectedExceptions = AppConfigMissingParametersException.class, expectedExceptionsMessageRegExp = "missingConfigParameters:\\[label, description, includeMenuAndFooter, uri, version\\]")
-	public void testUploadAppMissingRequiredConfigParameters() throws IOException
+	public void testCheckAndObtainConfigMissingRequiredConfigParameters() throws IOException
 	{
 		URL url = AppManagerServiceTest.class.getResource("/config-missing-keys.json");
 		appManagerService.checkAndObtainConfig("tempDir", IOUtils.toString(url, UTF_8));
 	}
+
+	@Test(expectedExceptions = AppAlreadyExistsException.class, expectedExceptionsMessageRegExp = "example2")
+	public void testCheckAndObtainConfigAppAlreadyExists() throws IOException
+	{
+		URL url = AppManagerServiceTest.class.getResource("/config.json");
+		File appDir = mock(File.class);
+		when(fileStore.getFile("example2")).thenReturn(appDir);
+		appManagerService.checkAndObtainConfig("tempDir", IOUtils.toString(url, UTF_8));
+	}
+
+	@Test
+	public void testConfigureApp()
+	{
+		when(appFactory.create()).thenReturn(app);
+
+		AppConfig appConfig = mock(AppConfig.class);
+		when(appConfig.getLabel()).thenReturn("test-app");
+		when(appConfig.getDescription()).thenReturn("Test app description");
+		when(appConfig.getIncludeMenuAndFooter()).thenReturn(true);
+		when(appConfig.getVersion()).thenReturn("1.0");
+		when(appConfig.getUri()).thenReturn("test-app-uri");
+		when(appConfig.getApiDependency()).thenReturn("v2.0");
+
+		appManagerService.configureApp(appConfig, "<h1>Test</h1>");
+
+		verify(dataService).add(AppMetadata.APP, app);
+	}
+
 }

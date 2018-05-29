@@ -165,8 +165,13 @@ public class AppManagerServiceImpl implements AppManagerService
 			throw new AppConfigMissingParametersException(missingAppConfigParams);
 		}
 
-		fileStore.move(fileStore.getStorageDir() + File.separator + tempDir,
-				fileStore.getStorageDir() + File.separator + appConfig.getUri());
+		if (fileStore.getFile(appConfig.getUri()) != null)
+		{
+			fileStore.deleteDirectory(tempDir);
+			throw new AppAlreadyExistsException(appConfig.getUri());
+		}
+
+		fileStore.move(tempDir, appConfig.getUri());
 
 		return appConfig;
 	}
