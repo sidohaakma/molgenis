@@ -37,11 +37,11 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.io.File.separator;
 import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.molgenis.app.manager.service.impl.AppManagerServiceImpl.APPS_TMP_DIR;
-import static org.molgenis.app.manager.service.impl.AppManagerServiceImpl.ZIP_FILE_PREFIX;
+import static org.molgenis.app.manager.service.impl.AppManagerServiceImpl.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
@@ -208,10 +208,9 @@ public class AppManagerServiceTest
 		File zipFile = new File(new URI(url.toString()).getPath());
 		FileInputStream zipData = new FileInputStream(zipFile);
 		String fileName = zipFile.getName();
-		when(fileStore.store(zipData, APPS_TMP_DIR + File.separator + ZIP_FILE_PREFIX + fileName)).thenReturn(zipFile);
+		when(fileStore.store(zipData, APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + fileName)).thenReturn(zipFile);
 		String storageDir = "dir";
 		when(fileStore.getStorageDir()).thenReturn(storageDir);
-
 		appManagerService.uploadApp(zipData, fileName, "app");
 	}
 
@@ -223,7 +222,7 @@ public class AppManagerServiceTest
 		FileInputStream zipData = new FileInputStream(zipFile);
 		String fileName = zipFile.getName();
 
-		when(fileStore.store(zipData, APPS_TMP_DIR + File.separator + ZIP_FILE_PREFIX + fileName)).thenReturn(zipFile);
+		when(fileStore.store(zipData, APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + fileName)).thenReturn(zipFile);
 		String storageDir = "dir";
 		when(fileStore.getStorageDir()).thenReturn(storageDir);
 
@@ -238,7 +237,7 @@ public class AppManagerServiceTest
 		FileInputStream zipData = new FileInputStream(textFile);
 		String fileName = textFile.getName();
 
-		String archiveName = APPS_TMP_DIR + File.separator + ZIP_FILE_PREFIX + fileName;
+		String archiveName = APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + fileName;
 		when(fileStore.store(zipData, archiveName)).thenReturn(textFile);
 
 		appManagerService.uploadApp(zipData, fileName, "app");
@@ -253,7 +252,7 @@ public class AppManagerServiceTest
 		FileInputStream zipData = new FileInputStream(textFile);
 		String fileName = textFile.getName();
 
-		String archiveName = APPS_TMP_DIR + File.separator + ZIP_FILE_PREFIX + fileName;
+		String archiveName = APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + fileName;
 		when(fileStore.store(zipData, archiveName)).thenReturn(textFile);
 
 		appManagerService.uploadApp(zipData, fileName, "app");
@@ -267,7 +266,7 @@ public class AppManagerServiceTest
 		FileInputStream zipData = new FileInputStream(textFile);
 		String fileName = textFile.getName();
 
-		String archiveName = APPS_TMP_DIR + File.separator + ZIP_FILE_PREFIX + fileName;
+		String archiveName = APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + fileName;
 		when(fileStore.store(zipData, archiveName)).thenReturn(textFile);
 
 		appManagerService.uploadApp(zipData, fileName, "app");
@@ -277,17 +276,25 @@ public class AppManagerServiceTest
 	public void testCheckAndObtainConfig() throws IOException
 	{
 		String tempDir = "temp";
+		String appUri = "example2";
 		InputStream configFile = AppManagerServiceTest.class.getResource("/config.json").openStream();
 		String configContent = IOUtils.toString(configFile, UTF_8);
+		File file = mock(File.class);
+		when(fileStore.getFile(APPS_DIR + separator + appUri)).thenReturn(file);
+		when(fileStore.getFile(APPS_DIR + separator + appUri).exists()).thenReturn(false);
 
 		appManagerService.checkAndObtainConfig(tempDir, configContent);
 
-		verify(fileStore).move(tempDir, "example2");
+		verify(fileStore).move(tempDir, APPS_DIR + separator + appUri);
 	}
 
 	@Test(expectedExceptions = InvalidAppConfigException.class)
 	public void testCheckAndObtainConfigInvalidJsonConfigFile() throws IOException
 	{
+		String appUri = "";
+		File appDir = mock(File.class);
+		when(fileStore.getFile(APPS_DIR + separator + appUri)).thenReturn(appDir);
+		when(fileStore.getFile(APPS_DIR + separator + appUri).exists()).thenReturn(false);
 		appManagerService.checkAndObtainConfig("tempDir", "");
 	}
 
@@ -303,8 +310,9 @@ public class AppManagerServiceTest
 	{
 		URL url = AppManagerServiceTest.class.getResource("/config.json");
 		File appDir = mock(File.class);
-		when(fileStore.getFile("example2")).thenReturn(appDir);
-		appManagerService.checkAndObtainConfig("tempDir", IOUtils.toString(url, UTF_8));
+		when(fileStore.getFile(APPS_DIR + separator + "example2")).thenReturn(appDir);
+		when(fileStore.getFile(APPS_DIR + separator + "example2").exists()).thenReturn(true);
+		appManagerService.checkAndObtainConfig(APPS_DIR + separator + "tempDir", IOUtils.toString(url, UTF_8));
 	}
 
 	@Test

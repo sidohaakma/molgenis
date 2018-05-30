@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.io.File.separator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -39,6 +40,7 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 @Service
 public class AppManagerServiceImpl implements AppManagerService
 {
+	public static final String APPS_DIR = "apps";
 	public static final String APPS_TMP_DIR = "apps_tmp";
 	public static final String ZIP_FILE_PREFIX = "zip_file_";
 	public static final String ZIP_INDEX_FILE = "index.html";
@@ -124,24 +126,26 @@ public class AppManagerServiceImpl implements AppManagerService
 	public String uploadApp(InputStream zipData, String zipFileName, String formFieldName)
 			throws IOException, ZipException
 	{
-		String tempAppArchiveName = APPS_TMP_DIR + File.separator + ZIP_FILE_PREFIX + zipFileName;
+		fileStore.createDirectory(APPS_TMP_DIR);
+		fileStore.createDirectory(APPS_DIR);
+		
+		String tempAppArchiveName = APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + zipFileName;
 		ZipFile tempAppArchive = new ZipFile(fileStore.store(zipData, tempAppArchiveName));
 
 		if (!tempAppArchive.isValidZipFile())
 		{
-			fileStore.delete(tempAppArchiveName);
+			fileStore.delete(APPS_TMP_DIR);
 			throw new InvalidAppArchiveException(formFieldName);
 		}
 
 		String tempFilesDir = "extracted_" + zipFileName;
-		String tempAppDirectoryName = fileStore.getStorageDir() + File.separator + tempFilesDir;
+		String tempAppDirectoryName = fileStore.getStorageDir() + separator + APPS_TMP_DIR + separator + tempFilesDir;
 		tempAppArchive.extractAll(tempAppDirectoryName);
-		fileStore.delete(tempAppArchiveName);
 
 		List<String> missingRequiredFilesList = buildMissingRequiredFiles(tempAppDirectoryName);
 		if (!missingRequiredFilesList.isEmpty())
 		{
-			fileStore.deleteDirectory(tempAppDirectoryName);
+			fileStore.deleteDirectory(APPS_TMP_DIR);
 			throw new AppArchiveMissingFilesException(missingRequiredFilesList);
 		}
 
@@ -153,7 +157,7 @@ public class AppManagerServiceImpl implements AppManagerService
 	{
 		if (configContent.isEmpty() || !isConfigContentValidJson(configContent))
 		{
-			fileStore.deleteDirectory(tempDir);
+			fileStore.deleteDirectory(APPS_TMP_DIR);
 			throw new InvalidAppConfigException();
 		}
 
@@ -161,17 +165,18 @@ public class AppManagerServiceImpl implements AppManagerService
 		List<String> missingAppConfigParams = buildMissingConfigParams(appConfig);
 		if (!missingAppConfigParams.isEmpty())
 		{
-			fileStore.deleteDirectory(tempDir);
+			fileStore.deleteDirectory(APPS_TMP_DIR);
 			throw new AppConfigMissingParametersException(missingAppConfigParams);
 		}
 
-		if (fileStore.getFile(appConfig.getUri()) != null)
+		if (fileStore.getFile(APPS_DIR + separator + appConfig.getUri()).exists())
 		{
-			fileStore.deleteDirectory(tempDir);
+			fileStore.deleteDirectory(APPS_TMP_DIR);
 			throw new AppAlreadyExistsException(appConfig.getUri());
 		}
 
-		fileStore.move(tempDir, appConfig.getUri());
+		fileStore.move(tempDir, APPS_DIR + separator + appConfig.getUri());
+		fileStore.deleteDirectory(APPS_TMP_DIR);
 
 		return appConfig;
 	}
@@ -180,6 +185,8 @@ public class AppManagerServiceImpl implements AppManagerService
 	@Transactional
 	public void configureApp(AppConfig appConfig, String htmlTemplate)
 	{
+		String appDirName = fileStore.getStorageDir() + separator + APPS_DIR + separator + appConfig.getUri();
+
 		// If provided config does not include runtimeOptions, set an empty map
 		Map<String, Object> runtimeOptions = appConfig.getRuntimeOptions();
 		if (runtimeOptions == null)
@@ -195,7 +202,7 @@ public class AppManagerServiceImpl implements AppManagerService
 		newApp.setTemplateContent(htmlTemplate);
 		newApp.setActive(false);
 		newApp.setIncludeMenuAndFooter(appConfig.getIncludeMenuAndFooter());
-		newApp.setResourceFolder(appConfig.getUri());
+		newApp.setResourceFolder(appDirName);
 		newApp.setAppConfig(gson.toJson(runtimeOptions));
 		newApp.setUri(appConfig.getUri());
 
@@ -205,7 +212,7 @@ public class AppManagerServiceImpl implements AppManagerService
 	@Override
 	public String extractFileContent(String appDir, String fileName)
 	{
-		File indexFile = new File(appDir + File.separator + fileName);
+		File indexFile = fileStore.getFile(appDir + separator + fileName);
 		return utf8Encodedfiletostring(indexFile);
 	}
 
@@ -258,13 +265,13 @@ public class AppManagerServiceImpl implements AppManagerService
 	{
 		List<String> missingFromArchive = newArrayList();
 
-		File indexFile = new File(appDirectoryName + File.separator + ZIP_INDEX_FILE);
+		File indexFile = new File(appDirectoryName + separator + ZIP_INDEX_FILE);
 		if (!indexFile.exists())
 		{
 			missingFromArchive.add(ZIP_INDEX_FILE);
 		}
 
-		File configFile = new File(appDirectoryName + File.separator + ZIP_CONFIG_FILE);
+		File configFile = new File(appDirectoryName + separator + ZIP_CONFIG_FILE);
 		if (!configFile.exists())
 		{
 			missingFromArchive.add(ZIP_CONFIG_FILE);

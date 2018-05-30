@@ -12,6 +12,7 @@ import org.molgenis.i18n.format.MessageFormatFactory;
 import org.molgenis.i18n.test.exception.TestAllPropertiesMessageSource;
 import org.molgenis.security.core.UserPermissionEvaluator;
 import org.molgenis.settings.AppSettings;
+import org.molgenis.web.ErrorMessageResponse;
 import org.molgenis.web.exception.FallbackExceptionHandler;
 import org.molgenis.web.exception.GlobalControllerExceptionHandler;
 import org.molgenis.web.exception.SpringExceptionHandler;
@@ -37,7 +38,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.molgenis.data.plugin.model.PluginPermission.VIEW_PLUGIN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.testng.Assert.assertEquals;
 
 @WebAppConfiguration
 @ContextConfiguration(classes = AppControllerTest.Config.class)
@@ -179,19 +179,12 @@ public class AppControllerTest extends AbstractTestNGSpringContextTests
 
 		AppResponse appResponse = AppResponse.create(app);
 		when(appManagerService.getAppByUri("uri")).thenReturn(appResponse);
-		String expectedMessage = "";
-		try
-		{
-			mockMvc.perform(get(AppController.URI + "/uri/")).andExpect(status().is4xxClientError());
-		}
-		catch (Exception e)
-		{
-			expectedMessage = e.getCause().getMessage();
-		}
-		finally
-		{
-			assertEquals(expectedMessage, "uri:uri");
-		}
+
+		mockMvc.perform(get(AppController.URI + "/uri/"))
+			   .andExpect(status().is4xxClientError())
+			   .andExpect(model().attribute("errorMessageResponse",
+					   ErrorMessageResponse.create("Access denied for inactive app at location /app/uri", "AM07")))
+			   .andExpect(view().name("view-exception"));
 	}
 
 	@Test
