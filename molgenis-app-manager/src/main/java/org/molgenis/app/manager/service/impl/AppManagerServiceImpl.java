@@ -128,7 +128,7 @@ public class AppManagerServiceImpl implements AppManagerService
 	{
 		fileStore.createDirectory(APPS_TMP_DIR);
 		fileStore.createDirectory(APPS_DIR);
-		
+
 		String tempAppArchiveName = APPS_TMP_DIR + separator + ZIP_FILE_PREFIX + zipFileName;
 		ZipFile tempAppArchive = new ZipFile(fileStore.store(zipData, tempAppArchiveName));
 
@@ -139,10 +139,11 @@ public class AppManagerServiceImpl implements AppManagerService
 		}
 
 		String tempFilesDir = "extracted_" + zipFileName;
-		String tempAppDirectoryName = fileStore.getStorageDir() + separator + APPS_TMP_DIR + separator + tempFilesDir;
-		tempAppArchive.extractAll(tempAppDirectoryName);
+		String tempAppDirectoryName = APPS_TMP_DIR + separator + tempFilesDir;
+		tempAppArchive.extractAll(fileStore.getStorageDir() + separator + tempAppDirectoryName);
 
-		List<String> missingRequiredFilesList = buildMissingRequiredFiles(tempAppDirectoryName);
+		List<String> missingRequiredFilesList = buildMissingRequiredFiles(
+				fileStore.getStorageDir() + separator + tempAppDirectoryName);
 		if (!missingRequiredFilesList.isEmpty())
 		{
 			fileStore.deleteDirectory(APPS_TMP_DIR);
