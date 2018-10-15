@@ -88,7 +88,7 @@ pipeline {
                 }
                 stage("Deploy to dev [ master ]") {
                     steps {
-                        milestone(ordinal: 100, label: 'deploy to dev.molgenis.org')
+                        milestone(ordinal: 100, label: 'deploy to master.dev.molgenis.org')
                         container('helm') {
                             sh "helm init --client-only"
                             sh "helm repo add molgenis ${HELM_REPO}"
@@ -143,7 +143,7 @@ pipeline {
                 }
                 stage('Deploy to test [ x.x ]') {
                     steps {
-                        milestone(ordinal: 100, label: 'deploy to test.molgenis.org')
+                        milestone(ordinal: 100, label: 'deploy to latest.test.molgenis.org')
                         container('helm') {
                             sh "helm init --client-only"
                             sh "helm repo add molgenis ${HELM_REPO}"
