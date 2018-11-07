@@ -115,6 +115,8 @@
     </div>
 </form>
 
+<script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
+
 <script>
     $("#feedbackForm").validate();
     $('#reg-captcha').rules('add', {

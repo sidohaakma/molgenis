@@ -36,8 +36,6 @@
         <script src="<@resource_href "/js/molgenis.js"/>"></script>
         <script src="<@resource_href "/js/script-evaluator.js"/>"></script>
 
-        <script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
-
         <#-- Load custome javascript -->
         <#if app_settings.customJavascript?has_content>
             <#list app_settings.customJavascript?split(r"\s*,\s*", "r") as js_file_name>
