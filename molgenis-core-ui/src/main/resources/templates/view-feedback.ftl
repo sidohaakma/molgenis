@@ -131,6 +131,16 @@
     });
 </script>
 
+<script>
+  grecaptcha.ready(function() {
+    console.log('execute action_feedback')
+    grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
+    .then(function(token) {
+        console.log('action_feedback token: ' + token)
+    });
+  });
+</script>
+
 <#else>
 <p>Admin email addresses not known.</p>
 </#if>
