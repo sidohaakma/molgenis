@@ -11,6 +11,9 @@
             <div class="modal-body">
             <#-- register form -->
                 <form id="register-form" class="form-horizontal" role="form">
+
+                    <input type="hidden" name="recaptcha_token"/>
+
                     <div class="form-group">
                         <label class="col-md-4 control-label" for="reg-username">Username *</label>
                         <div class="col-md-6">
@@ -103,19 +106,6 @@
                             </select>
                         </div>
                     </div>
-                    <hr>
-                    <h4>Code validation</h4>
-                    <div class="form-group">
-                        <div class="col-md-6 col-md-offset-4">
-                            <a href="#" id="captcha-href"><img id="captcha-img"/></a>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-md-4 control-label" for="reg-captcha">Code</label>
-                        <div class="col-md-6">
-                            <input type="text" class="form-control" id="reg-captcha" name="captcha">
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -125,6 +115,9 @@
         </div>
     </div>
 </div>
+
+<script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
+
 <script type="text/javascript">
     var modal = $('#register-modal');
     var submitBtn = $('#register-btn');
@@ -138,25 +131,7 @@
         equalTo: '#reg-password'
     });
 
-<#-- captcha events -->
-    $('#reg-captcha').rules('add', {
-        required: true,
-        remote: {
-            url: 'captcha',
-            type: 'POST'
-        }
-    });
-    $('#captcha-href').click(function (e) {
-        e.preventDefault();
-        $('#captcha-img').attr('src', '/captcha?_=' + Date.now());
-        $('captcha').val('');
-    });
-
 <#-- modal events -->
-    modal.on('show.bs.modal', function (e) {
-        $('#captcha-img').attr('src', '/captcha?_=' + Date.now());
-    });
-
     modal.on('hide.bs.modal', function (e) {
         e.stopPropagation();
         form[0].reset();
@@ -205,5 +180,13 @@
             e.stopPropagation();
             form.submit();
         }
+    });
+
+    grecaptcha.ready(function() {
+      grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
+      .then(function(token) {
+        console.log('action_feedback token: ' + token)
+        $('input[name="token"]').val(token);
+      });
     });
 </script>

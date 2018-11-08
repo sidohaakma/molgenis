@@ -21,7 +21,7 @@ public class ReCaptchaV3Service {
 
   private final CloseableHttpClient httpClient;
 
-  ReCaptchaV3Service(CloseableHttpClient httpClient) {
+  public ReCaptchaV3Service(CloseableHttpClient httpClient) {
     this.httpClient = requireNonNull(httpClient);
   }
 

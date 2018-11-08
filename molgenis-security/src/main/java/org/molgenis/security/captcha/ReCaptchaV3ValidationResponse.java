@@ -8,13 +8,19 @@ public class ReCaptchaV3ValidationResponse {
   private boolean success;
   private double score;
   private String action;
-  private String challenge_ts;  // timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
+  private String
+      challenge_ts; // timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
   private String string;
   private String hostname;
   private List<String> errorCodes;
 
-  public ReCaptchaV3ValidationResponse(boolean success, double score, String action,
-      String challenge_ts, String string, String hostname,
+  public ReCaptchaV3ValidationResponse(
+      boolean success,
+      double score,
+      String action,
+      String challenge_ts,
+      String string,
+      String hostname,
       List<String> errorCodes) {
     this.success = success;
     this.score = score;
@@ -90,13 +96,13 @@ public class ReCaptchaV3ValidationResponse {
       return false;
     }
     ReCaptchaV3ValidationResponse that = (ReCaptchaV3ValidationResponse) o;
-    return success == that.success &&
-        Double.compare(that.score, score) == 0 &&
-        Objects.equals(action, that.action) &&
-        Objects.equals(challenge_ts, that.challenge_ts) &&
-        Objects.equals(string, that.string) &&
-        Objects.equals(hostname, that.hostname) &&
-        Objects.equals(errorCodes, that.errorCodes);
+    return success == that.success
+        && Double.compare(that.score, score) == 0
+        && Objects.equals(action, that.action)
+        && Objects.equals(challenge_ts, that.challenge_ts)
+        && Objects.equals(string, that.string)
+        && Objects.equals(hostname, that.hostname)
+        && Objects.equals(errorCodes, that.errorCodes);
   }
 
   @Override

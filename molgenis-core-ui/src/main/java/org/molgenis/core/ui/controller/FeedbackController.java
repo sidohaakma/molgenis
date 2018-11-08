@@ -10,8 +10,7 @@ import javax.validation.constraints.NotBlank;
 import org.molgenis.data.security.auth.User;
 import org.molgenis.data.security.user.UserService;
 import org.molgenis.security.captcha.CaptchaException;
-import org.molgenis.security.captcha.CaptchaRequest;
-import org.molgenis.security.captcha.CaptchaService;
+import org.molgenis.security.captcha.ReCaptchaV3Service;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.web.PluginController;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -47,18 +45,18 @@ public class FeedbackController extends AbstractStaticContentController {
 
   private final UserService userService;
   private final AppSettings appSettings;
-  private final CaptchaService captchaService;
+  private final ReCaptchaV3Service reCaptchaV3Service;
   private final MailSender mailSender;
 
   public FeedbackController(
       UserService userService,
       AppSettings appSettings,
-      CaptchaService captchaService,
+      ReCaptchaV3Service reCaptchaV3Service,
       MailSender mailSender) {
     super(ID, URI);
     this.userService = requireNonNull(userService);
     this.appSettings = requireNonNull(appSettings);
-    this.captchaService = requireNonNull(captchaService);
+    this.reCaptchaV3Service = requireNonNull(reCaptchaV3Service);
     this.mailSender = requireNonNull(mailSender);
   }
 
@@ -82,10 +80,8 @@ public class FeedbackController extends AbstractStaticContentController {
    * @throws CaptchaException if no valid captcha is supplied
    */
   @PostMapping
-  public String submitFeedback(
-      @Valid FeedbackForm form, @Valid @ModelAttribute CaptchaRequest captchaRequest)
-      throws CaptchaException {
-    if (!captchaService.validateCaptcha(captchaRequest.getCaptcha())) {
+  public String submitFeedback(@Valid FeedbackForm form) throws Exception {
+    if (!reCaptchaV3Service.validate(form.getRecaptchaToken())) {
       form.setErrorMessage("Invalid captcha.");
       return VIEW_FEEDBACK;
     }
@@ -94,7 +90,6 @@ public class FeedbackController extends AbstractStaticContentController {
       SimpleMailMessage message = createFeedbackMessage(form);
       mailSender.send(message);
       form.setSubmitted(true);
-      captchaService.removeCaptcha();
     } catch (MailAuthenticationException e) {
       LOG.error("Error authenticating with email server.", e);
       form.setErrorMessage(MAIL_AUTHENTICATION_EXCEPTION_MESSAGE);
@@ -151,12 +146,17 @@ public class FeedbackController extends AbstractStaticContentController {
 
   /** Bean for the feedback form data. */
   public static class FeedbackForm {
+    private String recaptcha_token;
     private String name;
     private String email;
     private String subject;
     private String feedback;
     private boolean submitted = false;
     private String errorMessage;
+
+    public String getRecaptchaToken() {
+      return recaptcha_token;
+    }
 
     public String getName() {
       return name;
@@ -216,6 +216,10 @@ public class FeedbackController extends AbstractStaticContentController {
     @NotBlank
     public String getFeedback() {
       return feedback;
+    }
+
+    public void setRecaptchaToken(String recaptcha_token) {
+      this.recaptcha_token = recaptcha_token;
     }
 
     public void setFeedback(String feedback) {

@@ -49,6 +49,9 @@
 
 <form accept-charset="UTF-8" role="form" method="post" action="feedback" id="feedbackForm" class="form-horizontal"
       role="form">
+
+    <input type="hidden" name="recaptcha_token"/>
+
     <div class="form-group">
         <div class="col-md-1">
             <label class="control-label pull-right" for="form_name">Name</label>
@@ -91,23 +94,6 @@
         </div>
     </div>
 
-    <legend>Code validation</legend>
-    <div class="form-group">
-        <div class="col-md-10 col-md-offset-1">
-            <a href="#" id="captcha-href"><img id="captcha-img" src="/captcha"></a>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <div class="col-md-1">
-            <label class="control-label pull-right" for="reg-captcha">Code</label>
-        </div>
-
-        <div class="col-md-4">
-            <input type="text" class="form-control" id="reg-captcha" name="captcha">
-        </div>
-    </div>
-
     <div class="form-group">
         <div class="col-md-1 col-md-offset-1">
             <button type="submit" class="btn btn-success">Send</button>
@@ -118,27 +104,11 @@
 <script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
 
 <script>
-    $("#feedbackForm").validate();
-    $('#reg-captcha').rules('add', {
-        required: true,
-        remote: {
-            url: '/captcha',
-            type: 'POST'
-        }
-    });
-    $('#captcha-href').click(function (e) {
-        e.preventDefault();
-        $('#captcha-img').attr('src', '/captcha?_=' + Date.now());
-        $('captcha').val('');
-    });
-</script>
-
-<script>
   grecaptcha.ready(function() {
-    console.log('execute action_feedback')
     grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
     .then(function(token) {
         console.log('action_feedback token: ' + token)
+        $('input[name="token"]').val(token);
     });
   });
 </script>
