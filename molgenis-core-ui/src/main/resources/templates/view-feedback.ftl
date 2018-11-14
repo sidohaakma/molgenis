@@ -50,7 +50,7 @@
 <form accept-charset="UTF-8" role="form" method="post" action="feedback" id="feedbackForm" class="form-horizontal"
       role="form">
 
-    <input type="hidden" name="recaptcha_token"/>
+    <input type="hidden" name="recaptcha"/>
 
     <div class="form-group">
         <div class="col-md-1">
@@ -102,15 +102,16 @@
 </form>
 
 <#if isRecaptchaEnabled??>
-    <script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
+    <script src='https://www.google.com/recaptcha/api.js?render=${recaptchaPublicKey}'></script>
 
     <script>
-      grecaptcha.ready(function() {
-        grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
+      $('#feedbackForm').off('submit').submit(function () {
+        grecaptcha.execute('${recaptchaPublicKey}', { action: 'action_feedback' })
         .then(function(token) {
-            console.log('action_feedback token: ' + token)
-            $('input[name="token"]').val(token);
+          $('input[name="recaptcha"]').val(token);
+          $('#feedbackForm').off('submit').submit()
         });
+        return false;
       });
     </script>
 </#if>

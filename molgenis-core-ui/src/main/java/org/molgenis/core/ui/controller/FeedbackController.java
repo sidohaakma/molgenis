@@ -72,6 +72,7 @@ public class FeedbackController extends AbstractStaticContentController {
       model.addAttribute("userEmail", currentUser.getEmail());
     }
     model.addAttribute("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabledForFeedback());
+    model.addAttribute("recaptchaPublicKey", appSettings.getRecaptchaPublicKey());
     return VIEW_FEEDBACK;
   }
 
@@ -82,7 +83,8 @@ public class FeedbackController extends AbstractStaticContentController {
    */
   @PostMapping
   public String submitFeedback(@Valid FeedbackForm form) throws Exception {
-    if (!reCaptchaV3Service.validate(form.getRecaptchaToken())) {
+    if (appSettings.getRecaptchaIsEnabledForFeedback()
+        && !reCaptchaV3Service.validate(form.getRecaptcha())) {
       form.setErrorMessage("Invalid captcha.");
       return VIEW_FEEDBACK;
     }
@@ -147,7 +149,7 @@ public class FeedbackController extends AbstractStaticContentController {
 
   /** Bean for the feedback form data. */
   public static class FeedbackForm {
-    private String recaptcha_token;
+    private String recaptcha;
     private String name;
     private String email;
     private String subject;
@@ -155,8 +157,8 @@ public class FeedbackController extends AbstractStaticContentController {
     private boolean submitted = false;
     private String errorMessage;
 
-    public String getRecaptchaToken() {
-      return recaptcha_token;
+    public String getRecaptcha() {
+      return recaptcha;
     }
 
     public String getName() {
@@ -219,8 +221,8 @@ public class FeedbackController extends AbstractStaticContentController {
       return feedback;
     }
 
-    public void setRecaptchaToken(String recaptcha_token) {
-      this.recaptcha_token = recaptcha_token;
+    public void setRecaptcha(String recaptcha) {
+      this.recaptcha = recaptcha;
     }
 
     public void setFeedback(String feedback) {
