@@ -101,17 +101,19 @@
     </div>
 </form>
 
-<script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
+<#if isRecaptchaEnabled??>
+    <script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
 
-<script>
-  grecaptcha.ready(function() {
-    grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
-    .then(function(token) {
-        console.log('action_feedback token: ' + token)
-        $('input[name="token"]').val(token);
-    });
-  });
-</script>
+    <script>
+      grecaptcha.ready(function() {
+        grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
+        .then(function(token) {
+            console.log('action_feedback token: ' + token)
+            $('input[name="token"]').val(token);
+        });
+      });
+    </script>
+</#if>
 
 <#else>
 <p>Admin email addresses not known.</p>

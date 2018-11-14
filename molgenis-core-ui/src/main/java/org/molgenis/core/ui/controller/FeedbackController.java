@@ -71,6 +71,7 @@ public class FeedbackController extends AbstractStaticContentController {
       model.addAttribute("userName", getFormattedName(currentUser));
       model.addAttribute("userEmail", currentUser.getEmail());
     }
+    model.addAttribute("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabledForFeedback());
     return VIEW_FEEDBACK;
   }
 

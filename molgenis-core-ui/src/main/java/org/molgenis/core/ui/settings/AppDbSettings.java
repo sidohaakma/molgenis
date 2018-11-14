@@ -61,6 +61,13 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
 
     private static final String CUSTOM_JAVASCRIPT = "custom_javascript";
 
+    private static final String RECAPTCHA = "recaptcha";
+    private static final String RECAPTCHA_PUBLIC_KEY = "recaptcha_public_key";
+    private static final String RECAPTCHA_PRIVATE_KEY = "recaptcha_private_key";
+    private static final String RECAPTCHA_IS_ENABLED_FOR_FEEDBACK =
+        "recaptcha_is_enabled_for_feedback";
+    private static final String RECAPTCHA_IS_ENABLED_FOR_SIGNUP = "recaptcha_is_enabled_for_signup";
+
     private final MenuManagerServiceImpl menuManagerServiceImpl;
 
     public Meta(MenuManagerServiceImpl menuManagerServiceImpl) {
@@ -188,6 +195,38 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
           .setLabel("Tracking code footer")
           .setDescription(
               "JS tracking code that is placed in the footer HTML (e.g. PiWik). This enables the cookie wall.");
+
+      // Recaptcha settings
+      Attribute recaptchaAttr = addAttribute(RECAPTCHA).setDataType(COMPOUND).setLabel("Recaptcha");
+
+      addAttribute(RECAPTCHA_PRIVATE_KEY)
+          .setParent(recaptchaAttr)
+          .setDataType(STRING)
+          .setNillable(true)
+          .setLabel("Recaptcha private key")
+          .setDescription(
+              "The private key needed by the server to authenticate with the google servers");
+      addAttribute(RECAPTCHA_PUBLIC_KEY)
+          .setParent(recaptchaAttr)
+          .setDataType(STRING)
+          .setNillable(true)
+          .setLabel("Recaptcha public key")
+          .setDescription(
+              "The public key needed by the clients to authenticate with the google servers");
+      addAttribute(RECAPTCHA_IS_ENABLED_FOR_FEEDBACK)
+          .setParent(recaptchaAttr)
+          .setDataType(BOOL)
+          .setDefaultValue(String.valueOf(false))
+          .setNillable(false)
+          .setLabel("Enable recaptcha for feedback plugin")
+          .setDescription("Recaptcha keys need to be set");
+      addAttribute(RECAPTCHA_IS_ENABLED_FOR_SIGNUP)
+          .setParent(recaptchaAttr)
+          .setDataType(BOOL)
+          .setDefaultValue(String.valueOf(false))
+          .setNillable(false)
+          .setLabel("Enable recaptcha for signup")
+          .setDescription("Recaptcha keys need to be set");
     }
 
     private String getDefaultMenuValue() {
@@ -363,5 +402,25 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
   @Override
   public String getCustomJavascript() {
     return getString(Meta.CUSTOM_JAVASCRIPT);
+  }
+
+  @Override
+  public String getRecaptchaPrivateKey() {
+    return getString(Meta.RECAPTCHA_PRIVATE_KEY);
+  }
+
+  @Override
+  public String getRecaptchaPublicKey() {
+    return getString(Meta.RECAPTCHA_PUBLIC_KEY);
+  }
+
+  @Override
+  public boolean getRecaptchaIsEnabledForFeedback() {
+    return getBoolean(Meta.RECAPTCHA_IS_ENABLED_FOR_FEEDBACK);
+  }
+
+  @Override
+  public boolean getRecaptchaIsEnabledForSignup() {
+    return getBoolean(Meta.RECAPTCHA_IS_ENABLED_FOR_SIGNUP);
   }
 }

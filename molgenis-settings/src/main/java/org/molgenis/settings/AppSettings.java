@@ -131,6 +131,14 @@ public interface AppSettings {
    */
   void setCustomJavascript(String customJavascript);
 
+  String getRecaptchaPrivateKey();
+
+  String getRecaptchaPublicKey();
+
+  boolean getRecaptchaIsEnabledForFeedback();
+
+  boolean getRecaptchaIsEnabledForSignup();
+
   /**
    * @return Custom JavaScript <script src="..."></script> headers, specified as comma separated
    *     list
