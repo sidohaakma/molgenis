@@ -26,6 +26,7 @@ import org.molgenis.security.account.AccountControllerTest.Config;
 import org.molgenis.security.captcha.ReCaptchaV3Service;
 import org.molgenis.security.settings.AuthenticationSettings;
 import org.molgenis.security.user.MolgenisUserException;
+import org.molgenis.settings.AppSettings;
 import org.molgenis.web.converter.MolgenisGsonHttpMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +54,8 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired private AuthenticationSettings authenticationSettings;
 
+  @Autowired private AppSettings appSettings;
+
   private MockMvc mockMvc;
 
   @BeforeMethod
@@ -67,6 +70,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
 
     reset(authenticationSettings);
     reset(reCaptchaV3Service);
+    reset(appSettings);
     when(reCaptchaV3Service.validate("validCaptcha")).thenReturn(true);
     reset(accountService); // mocks in the config class are not resetted after each test
   }
@@ -248,6 +252,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
   @Test
   public void registerUser_invalidCaptcha() throws Exception {
     when(authenticationSettings.getSignUp()).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabledForSignup()).thenReturn(true);
     this.mockMvc
         .perform(
             post("/account/register")
@@ -298,7 +303,8 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
           reCaptchaV3Service(),
           redirectStrategy(),
           authenticationSettings(),
-          molgenisUserFactory());
+          molgenisUserFactory(),
+          appSettings());
     }
 
     @Bean
@@ -342,6 +348,11 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
       UserFactory userFactory = mock(UserFactory.class);
       when(userFactory.create()).thenAnswer(invocationOnMock -> mock(User.class));
       return userFactory;
+    }
+
+    @Bean
+    public AppSettings appSettings() {
+      return mock(AppSettings.class);
     }
   }
 }
