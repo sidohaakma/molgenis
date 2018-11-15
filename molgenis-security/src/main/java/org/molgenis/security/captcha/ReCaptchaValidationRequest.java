@@ -2,11 +2,11 @@ package org.molgenis.security.captcha;
 
 import java.util.Objects;
 
-public class ReCaptchaV3ValidationRequest {
+public class ReCaptchaValidationRequest {
 
   private String token;
 
-  public ReCaptchaV3ValidationRequest(String token) {
+  public ReCaptchaValidationRequest(String token) {
     this.token = token;
   }
 
@@ -26,7 +26,7 @@ public class ReCaptchaV3ValidationRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ReCaptchaV3ValidationRequest that = (ReCaptchaV3ValidationRequest) o;
+    ReCaptchaValidationRequest that = (ReCaptchaValidationRequest) o;
     return Objects.equals(token, that.token);
   }
 

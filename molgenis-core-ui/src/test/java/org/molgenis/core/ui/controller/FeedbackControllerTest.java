@@ -17,7 +17,7 @@ import org.molgenis.data.AbstractMolgenisSpringTest;
 import org.molgenis.data.security.auth.UserFactory;
 import org.molgenis.data.security.config.UserTestConfig;
 import org.molgenis.data.security.user.UserService;
-import org.molgenis.security.captcha.ReCaptchaV3Service;
+import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.web.converter.GsonConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
 
   @Autowired private MailSender mailSender;
 
-  @Autowired private ReCaptchaV3Service reCaptchaV3Service;
+  @Autowired private ReCaptchaService reCaptchaV3Service;
 
   @Autowired private GsonHttpMessageConverter gsonHttpMessageConverter;
 
@@ -238,8 +238,8 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
     }
 
     @Bean
-    public ReCaptchaV3Service reCaptchaV3Service() {
-      return mock(ReCaptchaV3Service.class);
+    public ReCaptchaService reCaptchaV3Service() {
+      return mock(ReCaptchaService.class);
     }
 
     @Bean

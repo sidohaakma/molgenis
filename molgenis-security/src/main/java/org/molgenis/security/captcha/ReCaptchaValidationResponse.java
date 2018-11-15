@@ -3,7 +3,7 @@ package org.molgenis.security.captcha;
 import java.util.List;
 import java.util.Objects;
 
-public class ReCaptchaV3ValidationResponse {
+public class ReCaptchaValidationResponse {
 
   private boolean success;
   private double score;
@@ -14,7 +14,7 @@ public class ReCaptchaV3ValidationResponse {
   private String hostname;
   private List<String> errorCodes;
 
-  public ReCaptchaV3ValidationResponse(
+  public ReCaptchaValidationResponse(
       boolean success,
       double score,
       String action,
@@ -95,7 +95,7 @@ public class ReCaptchaV3ValidationResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ReCaptchaV3ValidationResponse that = (ReCaptchaV3ValidationResponse) o;
+    ReCaptchaValidationResponse that = (ReCaptchaValidationResponse) o;
     return success == that.success
         && Double.compare(that.score, score) == 0
         && Objects.equals(action, that.action)

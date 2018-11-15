@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 import org.molgenis.data.security.auth.User;
 import org.molgenis.data.security.user.UserService;
 import org.molgenis.security.captcha.CaptchaException;
-import org.molgenis.security.captcha.ReCaptchaV3Service;
+import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.web.PluginController;
@@ -45,14 +45,14 @@ public class FeedbackController extends AbstractStaticContentController {
 
   private final UserService userService;
   private final AppSettings appSettings;
-  private final ReCaptchaV3Service reCaptchaV3Service;
+  private final ReCaptchaService reCaptchaV3Service;
   private final MailSender mailSender;
 
   public FeedbackController(
-      UserService userService,
-      AppSettings appSettings,
-      ReCaptchaV3Service reCaptchaV3Service,
-      MailSender mailSender) {
+          UserService userService,
+          AppSettings appSettings,
+          ReCaptchaService reCaptchaV3Service,
+          MailSender mailSender) {
     super(ID, URI);
     this.userService = requireNonNull(userService);
     this.appSettings = requireNonNull(appSettings);

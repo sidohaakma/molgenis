@@ -18,7 +18,7 @@ import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.security.auth.User;
 import org.molgenis.data.security.auth.UserFactory;
 import org.molgenis.security.captcha.CaptchaException;
-import org.molgenis.security.captcha.ReCaptchaV3Service;
+import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.security.settings.AuthenticationSettings;
 import org.molgenis.security.user.MolgenisUserException;
 import org.molgenis.web.ErrorMessageResponse;
@@ -63,17 +63,17 @@ public class AccountController {
       "You have successfully registered, your request has been forwarded to the administrator.";
 
   private final AccountService accountService;
-  private final ReCaptchaV3Service reCaptchaV3Service;
+  private final ReCaptchaService reCaptchaV3Service;
   private final RedirectStrategy redirectStrategy;
   private final AuthenticationSettings authenticationSettings;
   private final UserFactory userFactory;
 
   public AccountController(
-      AccountService accountService,
-      ReCaptchaV3Service reCaptchaV3Service,
-      RedirectStrategy redirectStrategy,
-      AuthenticationSettings authenticationSettings,
-      UserFactory userFactory) {
+          AccountService accountService,
+          ReCaptchaService reCaptchaV3Service,
+          RedirectStrategy redirectStrategy,
+          AuthenticationSettings authenticationSettings,
+          UserFactory userFactory) {
     this.accountService = requireNonNull(accountService);
     this.reCaptchaV3Service = requireNonNull(reCaptchaV3Service);
     this.redirectStrategy = requireNonNull(redirectStrategy);

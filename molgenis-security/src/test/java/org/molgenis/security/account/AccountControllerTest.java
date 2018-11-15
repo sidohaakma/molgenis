@@ -23,7 +23,7 @@ import org.molgenis.data.security.auth.UserFactory;
 import org.molgenis.data.security.user.UserService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.security.account.AccountControllerTest.Config;
-import org.molgenis.security.captcha.ReCaptchaV3Service;
+import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.security.settings.AuthenticationSettings;
 import org.molgenis.security.user.MolgenisUserException;
 import org.molgenis.web.converter.MolgenisGsonHttpMessageConverter;
@@ -49,7 +49,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired private AccountService accountService;
 
-  @Autowired private ReCaptchaV3Service reCaptchaV3Service;
+  @Autowired private ReCaptchaService reCaptchaV3Service;
 
   @Autowired private AuthenticationSettings authenticationSettings;
 
@@ -307,8 +307,8 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
     }
 
     @Bean
-    public ReCaptchaV3Service reCaptchaV3Service() {
-      return mock(ReCaptchaV3Service.class);
+    public ReCaptchaService reCaptchaV3Service() {
+      return mock(ReCaptchaService.class);
     }
 
     @Bean

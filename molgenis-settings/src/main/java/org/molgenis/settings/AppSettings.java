@@ -131,6 +131,10 @@ public interface AppSettings {
    */
   void setCustomJavascript(String customJavascript);
 
+  String getRecaptchaBotThreshold();
+
+  String getRecaptchaVerifyURI();
+
   String getRecaptchaPrivateKey();
 
   String getRecaptchaPublicKey();
