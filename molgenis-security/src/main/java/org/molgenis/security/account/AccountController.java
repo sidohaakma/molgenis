@@ -21,6 +21,7 @@ import org.molgenis.security.captcha.CaptchaException;
 import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.security.settings.AuthenticationSettings;
 import org.molgenis.security.user.MolgenisUserException;
+import org.molgenis.settings.AppSettings;
 import org.molgenis.web.ErrorMessageResponse;
 import org.molgenis.web.ErrorMessageResponse.ErrorMessage;
 import org.slf4j.Logger;
@@ -67,18 +68,21 @@ public class AccountController {
   private final RedirectStrategy redirectStrategy;
   private final AuthenticationSettings authenticationSettings;
   private final UserFactory userFactory;
+  private final AppSettings appSettings;
 
   public AccountController(
           AccountService accountService,
           ReCaptchaService reCaptchaV3Service,
           RedirectStrategy redirectStrategy,
           AuthenticationSettings authenticationSettings,
-          UserFactory userFactory) {
+          UserFactory userFactory,
+          AppSettings appSettings) {
     this.accountService = requireNonNull(accountService);
     this.reCaptchaV3Service = requireNonNull(reCaptchaV3Service);
     this.redirectStrategy = requireNonNull(redirectStrategy);
     this.authenticationSettings = requireNonNull(authenticationSettings);
     this.userFactory = requireNonNull(userFactory);
+    this.appSettings = requireNonNull(appSettings);
   }
 
   @GetMapping("/login")
@@ -91,6 +95,8 @@ public class AccountController {
     ModelAndView model = new ModelAndView("register-modal");
     model.addObject("countries", CountryCodes.get());
     model.addObject("min_password_length", MIN_PASSWORD_LENGTH);
+    model.addObject("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabledForSignup());
+    model.addObject("recaptchaPublicKey", appSettings.getRecaptchaPublicKey());
     return model;
   }
 
@@ -134,7 +140,8 @@ public class AccountController {
       if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
         throw new BindException(RegisterRequest.class, "password does not match confirm password");
       }
-      if (!reCaptchaV3Service.validate(registerRequest.getRecaptchaToken())) {
+      if (appSettings.getRecaptchaIsEnabledForSignup()
+          && !reCaptchaV3Service.validate(registerRequest.getRecaptcha())) {
         throw new CaptchaException("invalid captcha answer");
       }
       User user = toUser(registerRequest);

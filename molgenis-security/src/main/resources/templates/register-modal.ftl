@@ -12,7 +12,7 @@
             <#-- register form -->
                 <form id="register-form" class="form-horizontal" role="form">
 
-                    <input type="hidden" name="recaptcha_token"/>
+                    <input type="hidden" name="recaptcha"/>
 
                     <div class="form-group">
                         <label class="col-md-4 control-label" for="reg-username">Username *</label>
@@ -116,7 +116,9 @@
     </div>
 </div>
 
-<script src='https://www.google.com/recaptcha/api.js?render=6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew'></script>
+<#if isRecaptchaEnabled??>
+    <script src='https://www.google.com/recaptcha/api.js?render=${recaptchaPublicKey}'></script>
+</#if>
 
 <script type="text/javascript">
     var modal = $('#register-modal');
@@ -150,23 +152,40 @@
         if (form.valid() && !submitBtn.attr('disabled')) {
             submitBtn.attr('disabled', 'disabled');
 
-            $.ajax({
-                type: 'POST',
-                url: '/account/register',
-                data: form.serialize(),
-                global: false, // do not trigger default molgenis error handler
-                success: function (data) {
+            var deferred = $.Deferred();
+
+            deferred.then(function () {
+                $.ajax({
+                  type: 'POST',
+                  url: '/account/register',
+                  data: form.serialize(),
+                  global: false, // do not trigger default molgenis error handler
+                  success: function (data) {
                     $(document).trigger('molgenis-registered', data.message);
                     modal.modal('hide');
                     submitBtn.removeAttr('disabled');
-                },
-                error: function (xhr) {
+                  },
+                  error: function (xhr) {
                     if (xhr.responseText) {
-                        molgenis.createAlert(JSON.parse(xhr.responseText).errors, 'error', $('.modal-body', modal));
+                      molgenis.createAlert(JSON.parse(xhr.responseText).errors, 'error', $('.modal-body', modal));
                     }
                     submitBtn.removeAttr('disabled');
-                }
-            });
+                  }
+                });
+            })
+
+            if(${isRecaptchaEnabled}) {
+              grecaptcha.execute('${recaptchaPublicKey}', { action: 'action_signup' })
+              .then(function(token) {
+                $('input[name="recaptcha"]').val(token);
+                $('#feedbackForm').off('submit').submit()
+                deferred.resolve()
+              });
+            } else {
+              deferred.resolve()
+            }
+
+
         }
     });
     submitBtn.click(function (e) {
@@ -182,11 +201,4 @@
         }
     });
 
-    grecaptcha.ready(function() {
-      grecaptcha.execute('6LdPwngUAAAAAA7VJ0I_9XKkL_zb4jNr5mY9D_ew', { action: 'action_feedback' })
-      .then(function(token) {
-        console.log('action_feedback token: ' + token)
-        $('input[name="token"]').val(token);
-      });
-    });
 </script>

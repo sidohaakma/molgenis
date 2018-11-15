@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 class RegisterRequest {
-  private String recaptcha_token;
+  private String recaptcha;
   @NotNull private String username;
 
   @NotNull
@@ -32,12 +32,12 @@ class RegisterRequest {
   private String city;
   private String country;
 
-  public String getRecaptchaToken() {
-    return recaptcha_token;
+  public String getRecaptcha() {
+    return recaptcha;
   }
 
-  public void setRecaptchaToken(String recaptcha_token) {
-    this.recaptcha_token = recaptcha_token;
+  public void setRecaptcha(String recaptcha) {
+    this.recaptcha = recaptcha;
   }
 
   public String getUsername() {
