@@ -22,6 +22,8 @@ import org.molgenis.data.security.auth.User;
 import org.molgenis.data.security.auth.UserFactory;
 import org.molgenis.data.security.config.UserTestConfig;
 import org.molgenis.data.security.user.UserService;
+import org.molgenis.i18n.format.MessageFormatFactory;
+import org.molgenis.i18n.test.exception.TestAllPropertiesMessageSource;
 import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.web.converter.GsonConfig;
@@ -54,7 +56,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
 
   @Autowired private MailSender mailSender;
 
-  @Autowired private ReCaptchaService reCaptchaV3Service;
+  @Autowired private ReCaptchaService reCaptchaService;
 
   @Autowired private GsonHttpMessageConverter gsonHttpMessageConverter;
 
@@ -66,7 +68,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
 
   @BeforeMethod
   public void beforeMethod() {
-    reset(mailSender, appSettings, userService, reCaptchaV3Service);
+    reset(mailSender, appSettings, userService, reCaptchaService);
     when(appSettings.getTitle()).thenReturn("app123");
     mockMvcFeedback =
         MockMvcBuilders.standaloneSetup(feedbackController)
@@ -133,7 +135,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
     List<String> adminEmails = Collections.singletonList("molgenis@molgenis.org");
     when(userService.getSuEmailAddresses()).thenReturn(adminEmails);
     when(appSettings.getRecaptchaIsEnabledForFeedback()).thenReturn(true);
-    when(reCaptchaV3Service.validate("validCaptcha")).thenReturn(true);
+    when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
     mockMvcFeedback
         .perform(
             MockMvcRequestBuilders.post(FeedbackController.URI)
@@ -153,7 +155,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
     expected.setSubject("[feedback-app123] Feedback form");
     expected.setText("Feedback from First Last (user@domain.com):\n\n" + "Feedback.\nLine two.");
     verify(mailSender, times(1)).send(expected);
-    verify(reCaptchaV3Service, times(1)).validate("validCaptcha");
+    verify(reCaptchaService, times(1)).validate("validCaptcha");
   }
 
   @Test
@@ -167,7 +169,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
                 .param("feedback", "")
                 .param("recaptcha", "validCaptcha"))
         .andExpect(status().is4xxClientError());
-    verify(reCaptchaV3Service, times(0)).validate("validCaptcha");
+    verify(reCaptchaService, times(0)).validate("validCaptcha");
   }
 
   @Test
@@ -175,7 +177,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
     List<String> adminEmails = Collections.singletonList("molgenis@molgenis.org");
     when(userService.getSuEmailAddresses()).thenReturn(adminEmails);
     when(appSettings.getRecaptchaIsEnabledForFeedback()).thenReturn(true);
-    when(reCaptchaV3Service.validate("validCaptcha")).thenReturn(true);
+    when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
     SimpleMailMessage expected = new SimpleMailMessage();
     expected.setTo("molgenis@molgenis.org");
     expected.setCc("user@domain.com");
@@ -203,13 +205,13 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
                         equalTo(
                             "Unfortunately, we were unable to send the mail containing "
                                 + "your feedback. Please contact the administrator."))));
-    verify(reCaptchaV3Service, times(1)).validate("validCaptcha");
+    verify(reCaptchaService, times(1)).validate("validCaptcha");
   }
 
   @Test
   public void submitInvalidCaptcha() throws Exception {
     when(appSettings.getRecaptchaIsEnabledForFeedback()).thenReturn(true);
-    when(reCaptchaV3Service.validate("invalidCaptcha")).thenReturn(false);
+    when(reCaptchaService.validate("invalidCaptcha")).thenReturn(false);
     mockMvcFeedback
         .perform(
             MockMvcRequestBuilders.post(FeedbackController.URI)
@@ -224,7 +226,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
         .andExpect(
             model()
                 .attribute(
-                    "feedbackForm", hasProperty("errorMessage", equalTo("Invalid captcha."))));
+                    "feedbackForm", hasProperty("errorMessage", equalTo("You are not human, go away robot. Stop spamming the humans."))));
   }
 
   @Configuration
@@ -252,8 +254,10 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
     }
 
     @Bean
-    public MessageSource messageSource() {
-      return mock(MessageSource.class);
+    public TestAllPropertiesMessageSource messageSource() {
+      TestAllPropertiesMessageSource testAllPropertiesMessageSource = new TestAllPropertiesMessageSource(new MessageFormatFactory());
+      testAllPropertiesMessageSource.addMolgenisNamespaces("feedback");
+      return testAllPropertiesMessageSource;
     }
 
     @Bean
