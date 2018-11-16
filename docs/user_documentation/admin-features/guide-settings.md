@@ -1,10 +1,37 @@
-# Administrator features
+# Settings
+There are different items where you can configure settings in MOLGENIS:
+- [Application settings](#application-settings)
+- [Authentication settings](#authentication-settings)
+- [Mail settings](#mail-settings)
+- [DataExplorer settings](../finding-data/guide-explore.md)
+- OpenCPU settings
 
+## Application settings
+There are a three main sections in the application settings.
 
+- General settings
+- Tracking settings
+- [ReCaptcha settings](#recaptcha-settings)
 
+### ReCaptcha settings
+You can configure reCaptcha in MOLGENIS by setting up 2 services.
 
+#### Adding domain at ReCaptcha
+You have to configure a domain at [ReCaptcha](https://www.google.com/recaptcha). If you follow the this [documentation](https://developers.google.com/recaptcha/docs/v3) you can register your domain to use reCaptcha.
 
-# Specific settings
+#### Settings in MOLGENIS
+Filling out the settings in the *Application settings* in MOLGENIS.
+
+You have to configure 6 properties:
+
+- *ReCaptcha secret*: Can be obtained by configuring your domain in [ReCaptcha from Google](https://www.google.com/recaptcha) 
+- *ReCaptcha site*: Can be obtained by configuring your domain in [ReCaptcha from Google](https://www.google.com/recaptcha)
+- *Enable reCaptcha for Feedback plugin*: If set to true then the feedback plugin used reCaptcha for BOT-determination
+- *Enable reCaptcha for Sign-up plugin*: If set to true then the sign-up plugin used reCaptcha for BOT-determination
+- *Verification URI*: Fires a request for verification if the user is a BOT or not
+- *BOT threshold*: A number between 0.0 and 1.0. 1.0 is most likely a human and 0.0 is most likely a BOT. The threshold is compare to the score that reCaptcha calculates. 
+
+> note: Make sure you have your [Mail settings](#mail-settings) configured as well.
 
 ## Mail settings
 You should configure an email server to interact with your users for things like lost password recovery.
@@ -20,7 +47,7 @@ But you may also specify a different (non-Gmail) SMTP server.
 If you've filled in a username and password, the settings will be validated when you save them, by making a connection
 with the mail server. If you do not want the settings to be tested at all, you can set `testConnection` to false.
 
-### JavaMail properties
+#### JavaMail properties
 By default, the following low-level JavaMail properties, needed to interact with the Gmail SMTP server, are set:
 ```
 mail.smtp.starttls.enable=true
@@ -34,7 +61,7 @@ For a list of valid keys, check https://javamail.java.net/nonav/docs/api/
 > E.g. Add an entity with key ```mail.debug``` and value ```true``` if you'd like to debug the mail dialog with the server.
 
 
-# Authentication
+## Authentication settings
 When you are a superuser in MOLGENIS, you can configure three authentication methods: 
  * Username/password signin *(default)*
  * Google-sigin
