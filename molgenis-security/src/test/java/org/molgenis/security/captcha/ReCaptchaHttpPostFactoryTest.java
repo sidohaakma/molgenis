@@ -11,7 +11,7 @@ public class ReCaptchaHttpPostFactoryTest {
   private ReCaptchaHttpPostFactory factory = new ReCaptchaHttpPostFactory();
 
   @Test
-  public void testHttpPostCreate()  {
+  public void testHttpPostCreate() {
     HttpPost post = factory.create("http://verify.test.org");
     assertEquals(post.getURI(), URI.create("http://verify.test.org"));
   }

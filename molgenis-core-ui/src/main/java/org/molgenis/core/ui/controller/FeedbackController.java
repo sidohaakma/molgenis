@@ -93,10 +93,12 @@ public class FeedbackController extends AbstractStaticContentController {
       form.setSubmitted(true);
     } catch (MailAuthenticationException e) {
       LOG.error("Error authenticating with email server.", e);
-      form.setErrorMessage(messageSource.getMessage("feedback_not_authenticated_mail_server", null, getLocale()));
+      form.setErrorMessage(
+          messageSource.getMessage("feedback_not_authenticated_mail_server", null, getLocale()));
     } catch (MailSendException e) {
       LOG.error("Error sending mail", e);
-      form.setErrorMessage(messageSource.getMessage("feedback_not_authenticated_mail_server", null, getLocale()));
+      form.setErrorMessage(
+          messageSource.getMessage("feedback_not_authenticated_mail_server", null, getLocale()));
     }
     return VIEW_FEEDBACK;
   }

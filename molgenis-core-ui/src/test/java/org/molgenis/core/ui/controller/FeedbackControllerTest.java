@@ -28,7 +28,6 @@ import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.web.converter.GsonConfig;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -226,7 +225,10 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
         .andExpect(
             model()
                 .attribute(
-                    "feedbackForm", hasProperty("errorMessage", equalTo("You are not human, go away robot. Stop spamming the humans."))));
+                    "feedbackForm",
+                    hasProperty(
+                        "errorMessage",
+                        equalTo("You are not human, go away robot. Stop spamming the humans."))));
   }
 
   @Configuration
@@ -255,7 +257,8 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
 
     @Bean
     public TestAllPropertiesMessageSource messageSource() {
-      TestAllPropertiesMessageSource testAllPropertiesMessageSource = new TestAllPropertiesMessageSource(new MessageFormatFactory());
+      TestAllPropertiesMessageSource testAllPropertiesMessageSource =
+          new TestAllPropertiesMessageSource(new MessageFormatFactory());
       testAllPropertiesMessageSource.addMolgenisNamespaces("feedback");
       return testAllPropertiesMessageSource;
     }
