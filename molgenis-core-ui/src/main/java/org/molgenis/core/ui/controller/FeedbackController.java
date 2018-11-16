@@ -1,6 +1,7 @@
 package org.molgenis.core.ui.controller;
 
 import static java.util.Objects.requireNonNull;
+import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,13 +10,13 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import org.molgenis.data.security.auth.User;
 import org.molgenis.data.security.user.UserService;
-import org.molgenis.security.captcha.CaptchaException;
 import org.molgenis.security.captcha.ReCaptchaService;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.web.PluginController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.MailSender;
@@ -38,26 +39,26 @@ public class FeedbackController extends AbstractStaticContentController {
 
   public static final String ID = "feedback";
   public static final String URI = PluginController.PLUGIN_URI_PREFIX + ID;
-  private static final String MAIL_AUTHENTICATION_EXCEPTION_MESSAGE =
-      "Unfortunately, we were unable to send the mail containing your feedback. Please contact the administrator.";
-  private static final String MAIL_SEND_EXCEPTION_MESSAGE = MAIL_AUTHENTICATION_EXCEPTION_MESSAGE;
   private static final String VIEW_FEEDBACK = "view-feedback";
 
   private final UserService userService;
   private final AppSettings appSettings;
-  private final ReCaptchaService reCaptchaV3Service;
+  private final ReCaptchaService reCaptchaService;
   private final MailSender mailSender;
+  private final MessageSource messageSource;
 
   public FeedbackController(
-          UserService userService,
-          AppSettings appSettings,
-          ReCaptchaService reCaptchaV3Service,
-          MailSender mailSender) {
+      UserService userService,
+      AppSettings appSettings,
+      ReCaptchaService reCaptchaService,
+      MailSender mailSender,
+      MessageSource messageSource) {
     super(ID, URI);
     this.userService = requireNonNull(userService);
     this.appSettings = requireNonNull(appSettings);
-    this.reCaptchaV3Service = requireNonNull(reCaptchaV3Service);
+    this.reCaptchaService = requireNonNull(reCaptchaService);
     this.mailSender = requireNonNull(mailSender);
+    this.messageSource = requireNonNull(messageSource);
   }
 
   /** Serves feedback form. */
@@ -76,16 +77,13 @@ public class FeedbackController extends AbstractStaticContentController {
     return VIEW_FEEDBACK;
   }
 
-  /**
-   * Handles feedback form submission.
-   *
-   * @throws CaptchaException if no valid captcha is supplied
-   */
+  /** Handles feedback form submission. */
   @PostMapping
-  public String submitFeedback(@Valid FeedbackForm form) throws Exception {
+  public String submitFeedback(@Valid FeedbackForm form) {
     if (appSettings.getRecaptchaIsEnabledForFeedback()
-        && !reCaptchaV3Service.validate(form.getRecaptcha())) {
-      form.setErrorMessage("Invalid captcha.");
+        && !reCaptchaService.validate(form.getRecaptcha())) {
+      form.setErrorMessage(
+          messageSource.getMessage("feedback_recaptcha_validation_failed", null, getLocale()));
       return VIEW_FEEDBACK;
     }
     try {
@@ -95,10 +93,10 @@ public class FeedbackController extends AbstractStaticContentController {
       form.setSubmitted(true);
     } catch (MailAuthenticationException e) {
       LOG.error("Error authenticating with email server.", e);
-      form.setErrorMessage(MAIL_AUTHENTICATION_EXCEPTION_MESSAGE);
+      form.setErrorMessage(messageSource.getMessage("feedback_not_authenticated_mail_server", null, getLocale()));
     } catch (MailSendException e) {
       LOG.error("Error sending mail", e);
-      form.setErrorMessage(MAIL_SEND_EXCEPTION_MESSAGE);
+      form.setErrorMessage(messageSource.getMessage("feedback_not_authenticated_mail_server", null, getLocale()));
     }
     return VIEW_FEEDBACK;
   }
