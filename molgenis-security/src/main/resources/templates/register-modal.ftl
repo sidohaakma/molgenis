@@ -174,7 +174,7 @@
                 });
             })
 
-            if(${isRecaptchaEnabled}) {
+            if(${isRecaptchaEnabled?c}) {
               grecaptcha.execute('${recaptchaPublicKey}', { action: 'action_signup' })
               .then(function(token) {
                 $('input[name="recaptcha"]').val(token);

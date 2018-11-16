@@ -71,12 +71,12 @@ public class AccountController {
   private final AppSettings appSettings;
 
   public AccountController(
-          AccountService accountService,
-          ReCaptchaService reCaptchaV3Service,
-          RedirectStrategy redirectStrategy,
-          AuthenticationSettings authenticationSettings,
-          UserFactory userFactory,
-          AppSettings appSettings) {
+      AccountService accountService,
+      ReCaptchaService reCaptchaV3Service,
+      RedirectStrategy redirectStrategy,
+      AuthenticationSettings authenticationSettings,
+      UserFactory userFactory,
+      AppSettings appSettings) {
     this.accountService = requireNonNull(accountService);
     this.reCaptchaV3Service = requireNonNull(reCaptchaV3Service);
     this.redirectStrategy = requireNonNull(redirectStrategy);
