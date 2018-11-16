@@ -11,12 +11,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/recaptcha")
 public class ReCaptchaController {
 
-  @Autowired private ReCaptchaService reCaptchaV3Service;
+  @Autowired private ReCaptchaService reCaptchaService;
 
   @PostMapping
   @ResponseBody
-  public Boolean validateCaptcha(@RequestBody ReCaptchaValidationRequest reCaptchaRequest)
-      throws Exception {
-    return reCaptchaV3Service.validate(reCaptchaRequest.getToken());
+  public Boolean validateCaptcha(@RequestBody ReCaptchaValidationRequest reCaptchaRequest) {
+    return reCaptchaService.validate(reCaptchaRequest.getToken());
   }
 }
