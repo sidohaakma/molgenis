@@ -156,4 +156,14 @@ public class TestAppSettings implements AppSettings {
   public boolean getRecaptchaIsEnabledForSignup() {
     return false;
   }
+
+  @Override
+  public double getRecaptchaBotThreshold() {
+    return 0.0;
+  }
+
+  @Override
+  public String getRecaptchaVerifyURI() {
+    return null;
+  }
 }

@@ -131,16 +131,54 @@ public interface AppSettings {
    */
   void setCustomJavascript(String customJavascript);
 
-  String getRecaptchaBotThreshold();
 
+  /**
+   *
+   * The threshold that used to compare with the bot-score calculated by recaptcha
+   *
+   * @return threshold to determine if a bot is at work
+   */
+  double getRecaptchaBotThreshold();
+
+  /**
+   *
+   * Verification url used to access reCaptcha at google for BOT determination
+   *
+   * @return verification url
+   */
   String getRecaptchaVerifyURI();
 
+  /**
+   *
+   * Private key or "secret" that is used serverside to verify the host
+   *
+   * @return secret
+   */
   String getRecaptchaPrivateKey();
 
+  /**
+   *
+   * Public key or "site"-key that is used in the frontend to send to reCaptcha initially
+   *
+   * @return site key
+   */
   String getRecaptchaPublicKey();
 
+  /**
+   *
+   * Is reCaptcha enabled for feedback plugin
+   *
+   * @return is enabled for feedback
+   */
   boolean getRecaptchaIsEnabledForFeedback();
 
+
+  /**
+   *
+   * Is reCaptcha enabled for user signup
+   *
+   * @return is enabled for user signup
+   */
   boolean getRecaptchaIsEnabledForSignup();
 
   /**

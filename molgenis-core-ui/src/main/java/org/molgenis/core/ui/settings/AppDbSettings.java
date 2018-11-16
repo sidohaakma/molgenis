@@ -1,14 +1,21 @@
 package org.molgenis.core.ui.settings;
 
+import static java.util.Objects.requireNonNull;
+import static org.molgenis.data.meta.AttributeType.BOOL;
+import static org.molgenis.data.meta.AttributeType.COMPOUND;
+import static org.molgenis.data.meta.AttributeType.DECIMAL;
+import static org.molgenis.data.meta.AttributeType.HYPERLINK;
+import static org.molgenis.data.meta.AttributeType.INT;
+import static org.molgenis.data.meta.AttributeType.SCRIPT;
+import static org.molgenis.data.meta.AttributeType.STRING;
+import static org.molgenis.data.meta.AttributeType.TEXT;
+
 import org.molgenis.core.ui.menumanager.MenuManagerServiceImpl;
 import org.molgenis.data.meta.model.Attribute;
 import org.molgenis.settings.AppSettings;
 import org.molgenis.settings.DefaultSettingsEntity;
 import org.molgenis.settings.DefaultSettingsEntityType;
 import org.springframework.stereotype.Component;
-
-import static java.util.Objects.requireNonNull;
-import static org.molgenis.data.meta.AttributeType.*;
 
 /** Application settings that are read from a data source and persisted to a data source. */
 @Component
@@ -200,16 +207,16 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
           .setParent(recaptchaAttr)
           .setDataType(STRING)
           .setNillable(true)
-          .setLabel("Recaptcha private key")
+          .setLabel("Recaptcha secret")
           .setDescription(
-              "The private key needed by the server to authenticate with the google servers");
+              "The secret needed by the server to authenticate with the google servers");
       addAttribute(RECAPTCHA_PUBLIC_KEY)
           .setParent(recaptchaAttr)
           .setDataType(STRING)
           .setNillable(true)
-          .setLabel("Recaptcha public key")
+          .setLabel("Recaptcha site key")
           .setDescription(
-              "The public key needed by the clients to authenticate with the google servers");
+              "The site key needed by the clients to authenticate with the google servers");
       addAttribute(RECAPTCHA_IS_ENABLED_FOR_FEEDBACK)
           .setParent(recaptchaAttr)
           .setDataType(BOOL)
@@ -226,13 +233,13 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
           .setDescription("Recaptcha keys need to be set");
       addAttribute(RECAPTCHA_VERIFY_URI)
           .setParent(recaptchaAttr)
-          .setDataType(STRING)
+          .setDataType(HYPERLINK)
           .setDefaultValue("https://www.google.com/recaptcha/api/siteverify")
           .setNillable(false)
           .setLabel("The verifying URI for recaptcha")
           .setDescription(
               "This URI is used to verify the token which is determining if a bot is at work here.");
-      addAttribute(RECAPTCHA_VERIFY_URI)
+      addAttribute(RECAPTCHA_BOT_THRESHOLD)
           .setParent(recaptchaAttr)
           .setDataType(DECIMAL)
           .setDefaultValue(String.valueOf(0.5))
@@ -433,8 +440,8 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
   }
 
   @Override
-  public String getRecaptchaBotThreshold() {
-    return getString(Meta.RECAPTCHA_BOT_THRESHOLD);
+  public double getRecaptchaBotThreshold() {
+    return getDouble(Meta.RECAPTCHA_BOT_THRESHOLD);
   }
 
   @Override
