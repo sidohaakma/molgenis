@@ -101,12 +101,12 @@
     </div>
 </form>
 
-<#if isRecaptchaEnabled??>
-    <script src='https://www.google.com/recaptcha/api.js?render=${recaptchaPublicKey}'></script>
+<#if isRecaptchaEnabled!false>
+    <script src='https://www.google.com/recaptcha/api.js?render=${recaptchaPublicKey!''}'></script>
 
     <script>
       $('#feedbackForm').off('submit').submit(function () {
-        grecaptcha.execute('${recaptchaPublicKey}', { action: 'action_feedback' })
+        grecaptcha.execute('${recaptchaPublicKey!''}', { action: 'action_feedback' })
         .then(function(token) {
           $('input[name="recaptcha"]').val(token);
           $('#feedbackForm').off('submit').submit()

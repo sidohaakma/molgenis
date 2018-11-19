@@ -116,8 +116,8 @@
     </div>
 </div>
 
-<#if isRecaptchaEnabled??>
-    <script src='https://www.google.com/recaptcha/api.js?render=${recaptchaPublicKey}'></script>
+<#if isRecaptchaEnabled!false>
+    <script src='https://www.google.com/recaptcha/api.js?render=${recaptchaPublicKey!''}'></script>
 </#if>
 
 <script type="text/javascript">
@@ -175,7 +175,7 @@
             })
 
             if(${isRecaptchaEnabled?c}) {
-              grecaptcha.execute('${recaptchaPublicKey}', { action: 'action_signup' })
+              grecaptcha.execute('${recaptchaPublicKey!''}', { action: 'action_signup' })
               .then(function(token) {
                 $('input[name="recaptcha"]').val(token);
                 $('#feedbackForm').off('submit').submit()
