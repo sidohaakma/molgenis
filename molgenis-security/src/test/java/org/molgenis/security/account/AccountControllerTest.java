@@ -10,12 +10,15 @@ import static org.molgenis.data.security.auth.UserMetaData.EMAIL;
 import static org.molgenis.data.security.auth.UserMetaData.USER;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.testng.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import java.util.Collections;
+import org.mockito.ArgumentCaptor;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.security.auth.User;
@@ -50,7 +53,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired private AccountService accountService;
 
-  @Autowired private ReCaptchaService reCaptchaV3Service;
+  @Autowired private ReCaptchaService reCaptchaService;
 
   @Autowired private AuthenticationSettings authenticationSettings;
 
@@ -69,9 +72,9 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
             .build();
 
     reset(authenticationSettings);
-    reset(reCaptchaV3Service);
+    reset(reCaptchaService);
     reset(appSettings);
-    when(reCaptchaV3Service.validate("validCaptcha")).thenReturn(true);
+    when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
     reset(accountService); // mocks in the config class are not resetted after each test
   }
 
@@ -116,120 +119,124 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
     verify(accountService).activateUser("123");
   }
 
-  //  @Test
-  //  public void registerUser_activationModeUserProxy() throws Exception {
-  //    when(authenticationSettings.getSignUp()).thenReturn(true);
-  //    when(authenticationSettings.getSignUpModeration()).thenReturn(false);
-  //
-  //    this.mockMvc
-  //        .perform(
-  //            post("/account/register")
-  //                .header("X-Forwarded-Host", "website.com")
-  //                .param("username", "admin")
-  //                .param("password", "adminpw-invalid")
-  //                .param("confirmPassword", "adminpw-invalid")
-  //                .param("email", "admin@molgenis.org")
-  //                .param("lastname", "min")
-  //                .param("firstname", "ad")
-  //                .param("captcha", "validCaptcha")
-  //                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-  //        .andExpect(status().isOk())
-  //        .andExpect(
-  //            content()
-  //                .string(
-  //                    "{\"message\":\""
-  //                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_USER
-  //                        + "\"}"));
-  //    ArgumentCaptor<User> molgenisUserCaptor = ArgumentCaptor.forClass(User.class);
-  //    ArgumentCaptor<String> baseActivationUriCaptor = ArgumentCaptor.forClass(String.class);
-  //    verify(accountService)
-  //        .createUser(molgenisUserCaptor.capture(), baseActivationUriCaptor.capture());
-  //    assertEquals(baseActivationUriCaptor.getValue(), "http://website.com/account/activate");
-  //  }
+  @Test
+  public void registerUser_activationModeUserProxy() throws Exception {
+    when(authenticationSettings.getSignUp()).thenReturn(true);
+    when(authenticationSettings.getSignUpModeration()).thenReturn(false);
 
-  //  @Test
-  //  public void registerUser_activationModeUserProxyWithScheme() throws Exception {
-  //    when(authenticationSettings.getSignUp()).thenReturn(true);
-  //    when(authenticationSettings.getSignUpModeration()).thenReturn(false);
-  //
-  //    this.mockMvc
-  //        .perform(
-  //            post("/account/register")
-  //                .header("X-Forwarded-Proto", "https")
-  //                .header("X-Forwarded-Host", "website.com")
-  //                .param("username", "admin")
-  //                .param("password", "adminpw-invalid")
-  //                .param("confirmPassword", "adminpw-invalid")
-  //                .param("email", "admin@molgenis.org")
-  //                .param("lastname", "min")
-  //                .param("firstname", "ad")
-  //                .param("captcha", "validCaptcha")
-  //                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-  //        .andExpect(status().isOk())
-  //        .andExpect(
-  //            content()
-  //                .string(
-  //                    "{\"message\":\""
-  //                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_USER
-  //                        + "\"}"));
-  //    ArgumentCaptor<User> molgenisUserCaptor = ArgumentCaptor.forClass(User.class);
-  //    ArgumentCaptor<String> baseActivationUriCaptor = ArgumentCaptor.forClass(String.class);
-  //    verify(accountService)
-  //        .createUser(molgenisUserCaptor.capture(), baseActivationUriCaptor.capture());
-  //    assertEquals(baseActivationUriCaptor.getValue(), "https://website.com/account/activate");
-  //  }
+    this.mockMvc
+        .perform(
+            post("/account/register")
+                .header("X-Forwarded-Host", "website.com")
+                .param("username", "admin")
+                .param("password", "adminpw-invalid")
+                .param("confirmPassword", "adminpw-invalid")
+                .param("email", "admin@molgenis.org")
+                .param("lastname", "min")
+                .param("firstname", "ad")
+                .param("recaptch", "validCaptcha")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .string(
+                    "{\"message\":\""
+                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_USER
+                        + "\"}"));
+    ArgumentCaptor<User> molgenisUserCaptor = ArgumentCaptor.forClass(User.class);
+    ArgumentCaptor<String> baseActivationUriCaptor = ArgumentCaptor.forClass(String.class);
+    verify(accountService)
+        .createUser(molgenisUserCaptor.capture(), baseActivationUriCaptor.capture());
+    assertEquals(baseActivationUriCaptor.getValue(), "http://website.com/account/activate");
+  }
 
-  //  @Test
-  //  public void registerUser_activationModeUser() throws Exception {
-  //    when(authenticationSettings.getSignUp()).thenReturn(true);
-  //    when(authenticationSettings.getSignUpModeration()).thenReturn(false);
-  //
-  //    this.mockMvc
-  //        .perform(
-  //            post("/account/register")
-  //                .param("username", "admin")
-  //                .param("password", "adminpw-invalid")
-  //                .param("confirmPassword", "adminpw-invalid")
-  //                .param("email", "admin@molgenis.org")
-  //                .param("lastname", "min")
-  //                .param("firstname", "ad")
-  //                .param("captcha", "validCaptcha")
-  //                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-  //        .andExpect(status().isOk())
-  //        .andExpect(
-  //            content()
-  //                .string(
-  //                    "{\"message\":\""
-  //                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_USER
-  //                        + "\"}"));
-  //    verify(reCaptchaV3Service).validate("validCaptcha");
-  //  }
+  @Test
+  public void registerUser_activationModeUserProxyWithScheme() throws Exception {
+    when(authenticationSettings.getSignUp()).thenReturn(true);
+    when(authenticationSettings.getSignUpModeration()).thenReturn(false);
 
-  //  @Test
-  //  public void registerUser_activationModeAdmin() throws Exception {
-  //    when(authenticationSettings.getSignUp()).thenReturn(true);
-  //    when(authenticationSettings.getSignUpModeration()).thenReturn(true);
-  //
-  //    this.mockMvc
-  //        .perform(
-  //            post("/account/register")
-  //                .param("username", "admin")
-  //                .param("password", "adminpw-invalid")
-  //                .param("confirmPassword", "adminpw-invalid")
-  //                .param("email", "admin@molgenis.org")
-  //                .param("lastname", "min")
-  //                .param("firstname", "ad")
-  //                .param("captcha", "validCaptcha")
-  //                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-  //        .andExpect(status().isOk())
-  //        .andExpect(
-  //            content()
-  //                .string(
-  //                    "{\"message\":\""
-  //                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_ADMIN
-  //                        + "\"}"));
-  //    verify(reCaptchaV3Service).validate("validCaptcha");
-  //  }
+    this.mockMvc
+        .perform(
+            post("/account/register")
+                .header("X-Forwarded-Proto", "https")
+                .header("X-Forwarded-Host", "website.com")
+                .param("username", "admin")
+                .param("password", "adminpw-invalid")
+                .param("confirmPassword", "adminpw-invalid")
+                .param("email", "admin@molgenis.org")
+                .param("lastname", "min")
+                .param("firstname", "ad")
+                .param("recaptch", "validCaptcha")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .string(
+                    "{\"message\":\""
+                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_USER
+                        + "\"}"));
+    ArgumentCaptor<User> molgenisUserCaptor = ArgumentCaptor.forClass(User.class);
+    ArgumentCaptor<String> baseActivationUriCaptor = ArgumentCaptor.forClass(String.class);
+    verify(accountService)
+        .createUser(molgenisUserCaptor.capture(), baseActivationUriCaptor.capture());
+    assertEquals(baseActivationUriCaptor.getValue(), "https://website.com/account/activate");
+  }
+
+  @Test
+  public void registerUser_activationModeUser() throws Exception {
+    when(authenticationSettings.getSignUp()).thenReturn(true);
+    when(authenticationSettings.getSignUpModeration()).thenReturn(false);
+    when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabled()).thenReturn(true);
+
+    this.mockMvc
+        .perform(
+            post("/account/register")
+                .param("username", "admin")
+                .param("password", "adminpw-invalid")
+                .param("confirmPassword", "adminpw-invalid")
+                .param("email", "admin@molgenis.org")
+                .param("lastname", "min")
+                .param("firstname", "ad")
+                .param("recaptcha", "validCaptcha")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .string(
+                    "{\"message\":\""
+                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_USER
+                        + "\"}"));
+    verify(reCaptchaService).validate("validCaptcha");
+  }
+
+  @Test
+  public void registerUser_activationModeAdmin() throws Exception {
+    when(authenticationSettings.getSignUp()).thenReturn(true);
+    when(authenticationSettings.getSignUpModeration()).thenReturn(true);
+    when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabled()).thenReturn(true);
+
+    this.mockMvc
+        .perform(
+            post("/account/register")
+                .param("username", "admin")
+                .param("password", "adminpw-invalid")
+                .param("confirmPassword", "adminpw-invalid")
+                .param("email", "admin@molgenis.org")
+                .param("lastname", "min")
+                .param("firstname", "ad")
+                .param("recaptcha", "validCaptcha")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .string(
+                    "{\"message\":\""
+                        + AccountController.REGISTRATION_SUCCESS_MESSAGE_ADMIN
+                        + "\"}"));
+    verify(reCaptchaService).validate("validCaptcha");
+  }
 
   @Test
   public void registerUser_passwordNotEqualsConfirmPassword() throws Exception {
@@ -243,16 +250,16 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
                 .param("email", "admin@molgenis.org")
                 .param("lastname", "min")
                 .param("firstname", "ad")
-                .param("captcha", "validCaptcha")
+                .param("recaptcha", "validCaptcha")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED))
         .andExpect(status().isBadRequest());
-    verify(reCaptchaV3Service, times(0)).validate("validCaptcha");
+    verify(reCaptchaService, times(0)).validate("validCaptcha");
   }
 
   @Test
   public void registerUser_invalidCaptcha() throws Exception {
     when(authenticationSettings.getSignUp()).thenReturn(true);
-    when(appSettings.getRecaptchaIsEnabledForSignup()).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabled()).thenReturn(true);
     this.mockMvc
         .perform(
             post("/account/register")
@@ -262,7 +269,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
                 .param("email", "admin@molgenis.org")
                 .param("lastname", "min")
                 .param("firstname", "ad")
-                .param("captcha", "invalidCaptcha")
+                .param("recaptch", "invalidCaptcha")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED))
         .andExpect(status().isBadRequest());
   }
@@ -289,7 +296,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests {
                 .param("email", "admin@molgenis.org")
                 .param("lastname", "min")
                 .param("firstname", "ad")
-                .param("captcha", "validCaptcha")
+                .param("recaptch", "validCaptcha")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED))
         .andExpect(status().isBadRequest());
   }

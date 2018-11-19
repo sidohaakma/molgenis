@@ -95,7 +95,7 @@ public class AccountController {
     ModelAndView model = new ModelAndView("register-modal");
     model.addObject("countries", CountryCodes.get());
     model.addObject("min_password_length", MIN_PASSWORD_LENGTH);
-    model.addObject("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabledForSignup());
+    model.addObject("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabled());
     model.addObject("recaptchaPublicKey", appSettings.getRecaptchaPublicKey());
     return model;
   }
@@ -140,7 +140,7 @@ public class AccountController {
       if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
         throw new BindException(RegisterRequest.class, "password does not match confirm password");
       }
-      if (appSettings.getRecaptchaIsEnabledForSignup()
+      if (appSettings.getRecaptchaIsEnabled()
           && !reCaptchaV3Service.validate(registerRequest.getRecaptcha())) {
         throw new CaptchaException("invalid captcha answer");
       }

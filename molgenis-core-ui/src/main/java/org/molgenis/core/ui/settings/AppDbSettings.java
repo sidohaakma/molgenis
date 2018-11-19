@@ -66,9 +66,7 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
     private static final String RECAPTCHA = "recaptcha";
     private static final String RECAPTCHA_PUBLIC_KEY = "recaptcha_public_key";
     private static final String RECAPTCHA_PRIVATE_KEY = "recaptcha_private_key";
-    private static final String RECAPTCHA_IS_ENABLED_FOR_FEEDBACK =
-        "recaptcha_is_enabled_for_feedback";
-    private static final String RECAPTCHA_IS_ENABLED_FOR_SIGNUP = "recaptcha_is_enabled_for_signup";
+    private static final String RECAPTCHA_IS_ENABLED = "recaptcha_is_enabled";
     private static final String RECAPTCHA_VERIFY_URI = "recaptcha_verify_uri";
     private static final String RECAPTCHA_BOT_THRESHOLD = "recaptcha_bot_threshold";
 
@@ -217,19 +215,12 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
           .setLabel("Recaptcha site key")
           .setDescription(
               "The site key needed by the clients to authenticate with the google servers");
-      addAttribute(RECAPTCHA_IS_ENABLED_FOR_FEEDBACK)
+      addAttribute(RECAPTCHA_IS_ENABLED)
           .setParent(recaptchaAttr)
           .setDataType(BOOL)
           .setDefaultValue(String.valueOf(false))
           .setNillable(false)
-          .setLabel("Enable recaptcha for feedback plugin")
-          .setDescription("Recaptcha keys need to be set");
-      addAttribute(RECAPTCHA_IS_ENABLED_FOR_SIGNUP)
-          .setParent(recaptchaAttr)
-          .setDataType(BOOL)
-          .setDefaultValue(String.valueOf(false))
-          .setNillable(false)
-          .setLabel("Enable recaptcha for signup")
+          .setLabel("Enable recaptcha")
           .setDescription("Recaptcha keys need to be set");
       addAttribute(RECAPTCHA_VERIFY_URI)
           .setParent(recaptchaAttr)
@@ -445,12 +436,7 @@ public class AppDbSettings extends DefaultSettingsEntity implements AppSettings 
   }
 
   @Override
-  public boolean getRecaptchaIsEnabledForFeedback() {
-    return getBoolean(Meta.RECAPTCHA_IS_ENABLED_FOR_FEEDBACK);
-  }
-
-  @Override
-  public boolean getRecaptchaIsEnabledForSignup() {
-    return getBoolean(Meta.RECAPTCHA_IS_ENABLED_FOR_SIGNUP);
+  public boolean getRecaptchaIsEnabled() {
+    return getBoolean(Meta.RECAPTCHA_IS_ENABLED);
   }
 }

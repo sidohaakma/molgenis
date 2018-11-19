@@ -148,12 +148,7 @@ public class TestAppSettings implements AppSettings {
   }
 
   @Override
-  public boolean getRecaptchaIsEnabledForFeedback() {
-    return false;
-  }
-
-  @Override
-  public boolean getRecaptchaIsEnabledForSignup() {
+  public boolean getRecaptchaIsEnabled() {
     return false;
   }
 

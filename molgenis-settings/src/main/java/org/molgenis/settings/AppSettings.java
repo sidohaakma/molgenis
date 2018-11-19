@@ -160,18 +160,11 @@ public interface AppSettings {
   String getRecaptchaPublicKey();
 
   /**
-   * Is reCaptcha enabled for feedback plugin
+   * Is reCaptcha enabled
    *
-   * @return is enabled for feedback
+   * @return is enabled
    */
-  boolean getRecaptchaIsEnabledForFeedback();
-
-  /**
-   * Is reCaptcha enabled for user signup
-   *
-   * @return is enabled for user signup
-   */
-  boolean getRecaptchaIsEnabledForSignup();
+  boolean getRecaptchaIsEnabled();
 
   /**
    * @return Custom JavaScript <script src="..."></script> headers, specified as comma separated

@@ -133,7 +133,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
   public void submit() throws Exception {
     List<String> adminEmails = Collections.singletonList("molgenis@molgenis.org");
     when(userService.getSuEmailAddresses()).thenReturn(adminEmails);
-    when(appSettings.getRecaptchaIsEnabledForFeedback()).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabled()).thenReturn(true);
     when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
     mockMvcFeedback
         .perform(
@@ -175,7 +175,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
   public void submitErrorWhileSendingMail() throws Exception {
     List<String> adminEmails = Collections.singletonList("molgenis@molgenis.org");
     when(userService.getSuEmailAddresses()).thenReturn(adminEmails);
-    when(appSettings.getRecaptchaIsEnabledForFeedback()).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabled()).thenReturn(true);
     when(reCaptchaService.validate("validCaptcha")).thenReturn(true);
     SimpleMailMessage expected = new SimpleMailMessage();
     expected.setTo("molgenis@molgenis.org");
@@ -209,7 +209,7 @@ public class FeedbackControllerTest extends AbstractMolgenisSpringTest {
 
   @Test
   public void submitInvalidCaptcha() throws Exception {
-    when(appSettings.getRecaptchaIsEnabledForFeedback()).thenReturn(true);
+    when(appSettings.getRecaptchaIsEnabled()).thenReturn(true);
     when(reCaptchaService.validate("invalidCaptcha")).thenReturn(false);
     mockMvcFeedback
         .perform(

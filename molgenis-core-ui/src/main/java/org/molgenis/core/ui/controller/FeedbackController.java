@@ -72,7 +72,7 @@ public class FeedbackController extends AbstractStaticContentController {
       model.addAttribute("userName", getFormattedName(currentUser));
       model.addAttribute("userEmail", currentUser.getEmail());
     }
-    model.addAttribute("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabledForFeedback());
+    model.addAttribute("isRecaptchaEnabled", appSettings.getRecaptchaIsEnabled());
     model.addAttribute("recaptchaPublicKey", appSettings.getRecaptchaPublicKey());
     return VIEW_FEEDBACK;
   }
@@ -80,8 +80,7 @@ public class FeedbackController extends AbstractStaticContentController {
   /** Handles feedback form submission. */
   @PostMapping
   public String submitFeedback(@Valid FeedbackForm form) {
-    if (appSettings.getRecaptchaIsEnabledForFeedback()
-        && !reCaptchaService.validate(form.getRecaptcha())) {
+    if (appSettings.getRecaptchaIsEnabled() && !reCaptchaService.validate(form.getRecaptcha())) {
       form.setErrorMessage(
           messageSource.getMessage("feedback_recaptcha_validation_failed", null, getLocale()));
       return VIEW_FEEDBACK;
