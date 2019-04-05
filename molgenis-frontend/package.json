@@ -10,7 +10,6 @@
     "@molgenis/navigator": "0.1.1",
     "@molgenis/one-click-importer": "0.1.1",
     "@molgenis/questionnaires": "1.0.0",
-    "@molgenis/scripts": "1.0.0",
     "@molgenis/searchall": "0.1.2",
     "@molgenis/security": "0.1.2",
     "@molgenis/settings": "1.0.0"

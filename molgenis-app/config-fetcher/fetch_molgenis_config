@@ -1,0 +1,1 @@
+* * * * * wget "http://molgenis:8080/menu/main/dataexplorer/module/entitiesreport?entity=aaaac2pn7ebtwascvqnaabaaae&molgenis-token=apps-config" >> /var/log/cron.log 2>&1
