@@ -27,7 +27,7 @@ pipeline {
                         env.PGP_PASSPHRASE = 'literal:' + sh(script: 'vault read -field=passphrase secret/ops/certificate/pgp/molgenis-ci', returnStdout: true)
                         env.CODECOV_TOKEN = sh(script: 'vault read -field=value secret/ops/token/codecov', returnStdout: true)
                         env.GITHUB_USER = sh(script: 'vault read -field=username secret/ops/token/github', returnStdout: true)
-                        env.DOCKER_AUTH = sh(script: 'vault read -field=username secret/ops/token/dockerhub', returnStdout: true)
+                        env.DOCKER_AUTH = sh(script: 'vault read -field=value secret/ops/token/dockerhub', returnStdout: true)
                     }
                 }
                 dir('/home/jenkins/.m2') {
