@@ -6,6 +6,8 @@ pipeline {
     }
     environment {
         LOCAL_REPOSITORY = "${LOCAL_REGISTRY}/molgenis/molgenis-app"
+        DOCS_REPOSITORY = "molgenis/molgenis-docs"
+        LOCAL_DOCS_REPOSITORY = "${LOCAL_REGISTRY}/molgenis/molgenis-docs"
         YUM_REPOSITORY_SNAPSHOTS = "https://${env.LOCAL_REGISTRY}/repository/yum-snapshots/"
         YUM_REPOSITORY_RELEASES = "https://${env.LOCAL_REGISTRY}/repository/yum-releases/"
         CHART_VERSION = '1.3.1'
@@ -25,6 +27,7 @@ pipeline {
                         env.PGP_PASSPHRASE = 'literal:' + sh(script: 'vault read -field=passphrase secret/ops/certificate/pgp/molgenis-ci', returnStdout: true)
                         env.CODECOV_TOKEN = sh(script: 'vault read -field=value secret/ops/token/codecov', returnStdout: true)
                         env.GITHUB_USER = sh(script: 'vault read -field=username secret/ops/token/github', returnStdout: true)
+                        env.DOCKER_AUTH = sh(script: 'vault read -field=username secret/ops/token/dockerhub', returnStdout: true)
                     }
                 }
                 dir('/home/jenkins/.m2') {
@@ -127,6 +130,26 @@ pipeline {
                         }
                     }
                 }
+                stage("Build docs [ master ]") {
+                    environment {
+                        DOCKER_CONFIG="/root/.docker"
+                    }
+                    steps {
+                        container("node") {
+                            dir("docs") {
+                                script {
+                                    sh "npm install vuepress -g"
+                                    sh "vuepress build"
+                                }
+                            }
+                        }
+                        container (name: 'kaniko', shell: '/busybox/sh') {
+                            sh "#!/busybox/sh\nmkdir -p ${DOCKER_CONFIG}"
+                            sh "#!/busybox/sh\necho '{\"auths\": {\"${DOCKER_REGISTRY}\": {\"auth\": \"${DOCKER_AUTH}\"}}}' > ${DOCKER_CONFIG}/config.json"
+                            sh "#!/busybox/sh\n/kaniko/executor --dockerfile=${WORKSPACE}/docs/Dockerfile --context ${WORKSPACE}/docs --destination ${DOCS_REPOSITORY}:${BRANCH_NAME}"
+                        }
+                    }
+                }
             }
         }
         stage('Steps [ x.x ]') {
@@ -153,6 +176,26 @@ pipeline {
                                 sh "mvn -q -B dockerfile:build dockerfile:tag dockerfile:push -Ddockerfile.tag=${BRANCH_NAME}-latest"
                                 sh "mvn -q -B dockerfile:tag dockerfile:push -Ddockerfile.tag=latest"
                             }
+                        }
+                    }
+                }
+                stage("Build docs [ x.x ]") {
+                    environment {
+                        DOCKER_CONFIG="/root/.docker"
+                    }
+                    steps {
+                        container("node") {
+                            dir("docs") {
+                                script {
+                                    sh "npm install vuepress -g"
+                                    sh "vuepress build"
+                                }
+                            }
+                        }
+                        container (name: 'kaniko', shell: '/busybox/sh') {
+                            sh "#!/busybox/sh\nmkdir -p ${DOCKER_CONFIG}"
+                            sh "#!/busybox/sh\necho '{\"auths\": {\"${DOCKER_REGISTRY}\": {\"auth\": \"${DOCKER_AUTH}\"}}}' > ${DOCKER_CONFIG}/config.json"
+                            sh "#!/busybox/sh\n/kaniko/executor --dockerfile=${WORKSPACE}/docs/Dockerfile --context ${WORKSPACE}/docs --destination ${DOCS_REPOSITORY}:${BRANCH_NAME}"
                         }
                     }
                 }

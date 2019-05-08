@@ -1,5 +1,4 @@
 # EMX model
-
 The default import format for MOLGENIS is 'EMX'. This is a flexible spreadsheet format (Excel, CSV) that allows you to annotate your data with a data model. This works because you can tell MOLGENIS the 'model' of your data via a special sheet named 'attributes'.
 Optionally, you can also add metadata on entities (i.e., classes, tables), and packages (i.e, models and submodels).
 It is also possible to provide packages in an emx file via the 'packages' sheet without providing the attributes sheet.
@@ -27,7 +26,7 @@ Then you must provide a model of your 'patients' via Excel with sheet named 'att
 
 'entity' should show the name of your data sheet. Each attribute the column headers in your data. Default dataType is 'string' so you only need to provide non-string values (int, date, decimal, etc). And you must always provide one idAttribute that has 'nillable' = 'FALSE'.
 
-You can first upload the 'model' and then the 'data'. Or you can put the both into one file and upload in one go. What you prefer :-) [todo: provide example files for download]
+You can first upload the 'model' and then the 'data'. Or you can put the both into one file and upload in one go. What you prefer :-).
 
 ## Advanced example
 ([download](data/advanced_data_example_v20171206.xlsx))
@@ -231,27 +230,59 @@ is used to create computed attributes.
 
 ##### Template
 
-In addition to basic 'computed strings' and 'computed' objects a template can be used as expression. The template expression format is:
-{"template":"..."} with the value a [Mustache](http://mustache.github.io/) template. Tags must refer to attribute identifiers 
-(e.g. {{myStringAttribute}}). For attributes referencing another entity type the attribute in the referencing entity type needs to be 
-specified as well (e.g. {{myXrefAttribute.id}}).
+In addition to basic 'computed strings' and 'computed' objects a template can be used as expression. The template expression format is shown below. The template expressions are based upon the [Mustache](http://mustache.github.io/) template. 
+::: v-pre
+  { "template" : "..." }
+:::  
+Tags must refer to attribute identifiers 
 
-*Example:*
+e.g. 
+::: v-pre
+  {{ myStringAttribute }}
+:::
+
+For attributes referencing another entity type the attribute in the referencing entity type needs to be 
+specified as well 
+
+e.g. 
+::: v-pre
+  {{ myXrefAttribute.id }}
+:::
+
 
 | name	         | entity	      | dataType | refEntity	 | expression                                               |
 |----------------|--------------|----------|-------------|----------------------------------------------------------|
 | id	           | MyEntityType |	string	 |			       |                                                          |
 | xref0	         | MyEntityType |	xref	   | MyReference |                                                          |
 | xref1	         | MyEntityType |	xref	   | MyReference |                                                          |
-| computedXref	 | MyEntityType |	string	 |             | {"template":"lorum {{xref0.id}} ipsum {{xref1.label}}"} |
+| computedXref	 | MyEntityType |	string	 |             | *Example 1* |
 | mref0	         | MyEntityType |	mref	   | MyReference |                                                          |
 | mref1	         | MyEntityType |	mref	   | MyReference |                                                          |
-| computedMref	 | MyEntityType |	string   |						 | {"template":"my {{mref0.id}} text {{mref1.label}}"}     |
+| computedMref	 | MyEntityType |	string   |						 | *Example 2* |
 | string0	       | MyEntityType |	string	 |						 |                                                          |
 | string1	       | MyEntityType |	string	 |						 |                                                          |
-| computedString | MyEntityType |	string	 |						 | {"template":"{{string0}} and {{string1}}"}             |
+| computedString | MyEntityType |	string	 |						 | *Example 3* |
 | id	           | MyReference  |	string	 |						 |                                                          |
 | label	         | MyReference  |	string	 |						 |                                                          |
+
+*Example 1*
+```
+::: v-pre 
+  {"template":"lorum {{xref0.id}} ipsum {{xref1.label}}"} 
+:::
+```
+*Example 2*
+```
+::: v-pre 
+  {"template":"my {{mref0.id}} text {{mref1.label}}"} 
+:::
+```
+*Example 3*
+```
+::: v-pre 
+  {"template":"{{string0}} and {{string1}}"} 
+:::
+```
 
 ## Entities options
 ### Required columns
