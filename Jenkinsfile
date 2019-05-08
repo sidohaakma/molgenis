@@ -130,7 +130,7 @@ pipeline {
                         }
                     }
                 }
-                stage("Build docs [ master ]") {
+                stage("Generate docs [ master ]") {
                     environment {
                         DOCKER_CONFIG="/root/.docker"
                     }
@@ -179,7 +179,7 @@ pipeline {
                         }
                     }
                 }
-                stage("Build docs [ x.x ]") {
+                stage("Generate docs [ x.x ]") {
                     environment {
                         DOCKER_CONFIG="/root/.docker"
                     }
