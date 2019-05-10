@@ -1,1 +1,2 @@
+## Please updated the entity id to the new apps entity id
 * * * * * wget -qO- "http://molgenis:8080/menu/main/dataexplorer/module/entitiesreport?entity=aaaac2vbhjimmascvqjqaayaae&molgenis-token=apps-config" | grep location > /etc/nginx/conf.d/location.conf
