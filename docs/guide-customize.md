@@ -1,4 +1,4 @@
-# Layout settings
+# Customize MOLGENIS
 
 MOLGENIS allows extensive customization of look & feel to suit your work
 
@@ -25,7 +25,7 @@ Fill in the Create Menu Item form with the following data:
 Now press 'Create'. The Contact information item will appear in the list on the right. Move it under the Test menu, and save the layout. You should now have a Test drop down in your menu, and when you open it, it should show you the Contact information item. The contact plugin is similar to the Home plugin as it lets you fill in information via an online editor
 
 **Using Query string to add additional parameters**  
-Some modules, like the data explorer, can be opened with starting parameters. These can be used via the Query string field when creating a new menu item. To test this, we will add a Query string to the existing Data Explorer menu item so that the data set we created in the [Upload guide](guide-upload.md)will be selected at the start.
+Some modules, like the data explorer, can be opened with starting parameters. These can be used via the Query string field when creating a new menu item. To test this, we will add a Query string to the existing Data Explorer menu item so that the data set we created in the [Import guide](guide-data-import.md)will be selected at the start.
 
 Edit the existing data explorer item by pressing the pencil, and add the following Query string:
 
@@ -81,7 +81,7 @@ If you need some aspiration for a nice home page, you visit either the [ASE webs
 
 ## Entity report
 
-By default, the entity report will be generated using the generic [Freemarker](http://freemarker.incubator.apache.org/docs/index.html) template [`view-entityreport-generic-default.ftl`](https://github.com/molgenis/molgenis/blob/master/molgenis-dataexplorer/src/main/resources/templates/view-entityreport-generic-default.ftl). You can customize this entity report for specific entities by adding Freemarker Templates for those entity. You'll need write permission for the entity `FreemarkerTemplate` to do this.
+By default, the entity report will be generated using the generic [Freemarker](http://freemarker.apache.org/) template [`view-entityreport-generic-default.ftl`](https://github.com/molgenis/molgenis/blob/master/molgenis-dataexplorer/src/main/resources/templates/view-entityreport-generic-default.ftl). You can customize this entity report for specific entities by adding Freemarker Templates for those entity. You'll need write permission for the entity `FreemarkerTemplate` to do this.
 
 1. In the top menu, select the Data Explorer.
 2. In the pulldown, select the entity FreemarkerTemplate
@@ -158,7 +158,7 @@ When clicking the copy button, the URL is copied to your clipboard. You can past
 ### Accessing entity details from Freemarker
 The model will contain
  * a variable named `entity` of type [`org.molgenis.data.Entity`](https://github.com/molgenis/molgenis/blob/master/molgenis-data/src/main/java/org/molgenis/data/Entity.java)
- * a variable named `entityMetadata` of type [`org.molgenis.data.EntityMetaData`](https://github.com/molgenis/molgenis/blob/master/molgenis-data/src/main/java/org/molgenis/data/EntityMetaData.java)
+ * a variable named `entityTypeMetadata` of type [`org.molgenis.data.meta.model.EntityTypeMetaData`](https://github.com/molgenis/molgenis/blob/master/molgenis-data/src/main/java/org/molgenis/data/meta/model/EntityTypeMetadata.java)
 which you can use to specify the contents of your template.
 
 * To display the value of one of the entity's attributes value, use `${entity.getString("<the attribute name>")}`.

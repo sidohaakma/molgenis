@@ -1,4 +1,4 @@
-# REST v2
+# REST api (v2)
 
 We are expanding and improving the REST api. At its heart is a simplified query syntax called RSQL for collection queries
 For query syntax see [RSQL parser](https://github.com/jirutka/rsql-parser). In addition we simplify the reading of entities.
@@ -24,7 +24,14 @@ POST http://molgenis.mydomain.example/api/v2/<entity_name>/<entity_id>?_method=G
 attrs=attr0(subattr0,subattr1),attr1(*)
 ```
 
-## Query
+## Delete
+
+*Request*
+```
+DELETE http://molgenis.mydomain.example/api/v2/<entity_name>/<entity_id>
+```
+
+# Query
 
 We use the [RSQL](https://github.com/jirutka/rsql-parser) HTTP/URL based query language:
 
@@ -261,6 +268,7 @@ Body
         href: "/api/v2/Person/2"
     }]
 }
+```
 
 ## One value
 
