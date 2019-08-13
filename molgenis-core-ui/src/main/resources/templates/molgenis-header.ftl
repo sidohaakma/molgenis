@@ -75,6 +75,23 @@
         <#-- Include molgenis-menu css -->
         <link rel="stylesheet" href="/@molgenis-ui/menu/dist/context.css" type="text/css">
 
+        <script type="text/javascript" src="/js/bootstrap-4/requirejs.js"></script>
+
+        <script>
+            requirejs.config({
+                baseUrl: 'js/bootstrap-4'
+            })
+
+            requirejs(["context.umd", "vue"], function(context, Vue) {
+                console.log('I am here!', context, Vue)
+                new Vue({
+                    render: createElement => createElement(context.default.HEaderCOmponent)
+                }).$mount('#molgenis-site-menu')
+            })
+        </script>
+
+
+
     </#if>
 
     <#-- Load css specified via settigns -->
@@ -117,9 +134,8 @@
             window.cookieWall = ${cookieWall?c}
         </script>
 
-        <#-- Include the Vue version of the molgenis menu  -->
+        <#-- Include the Vue version of the molgenis menu -->
         <div id="molgenis-site-menu"></div>
-        <script type=text/javascript src="/@molgenis-ui/menu/dist/context.umd.js"></script>
     </#if>
 
 <#-- Start application content -->
