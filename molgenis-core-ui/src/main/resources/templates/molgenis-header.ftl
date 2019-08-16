@@ -75,18 +75,51 @@
         <#-- Include molgenis-menu css -->
         <link rel="stylesheet" href="/@molgenis-ui/menu/dist/context.css" type="text/css">
 
-        <script type="text/javascript" src="/js/bootstrap-4/requirejs.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
 
         <script>
+            <#assign menu=gson.toJson(menu)>
+
             requirejs.config({
-                baseUrl: 'js/bootstrap-4'
+                baseUrl: '/@molgenis-ui/context/dist/'
+            });
+
+            requirejs(["context.umd", "https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"], function(context, Vue) {
+                new Vue({
+                    render: createElement => {
+                        const propsData = {
+                            props: {
+                                molgenisMenu: {
+                                    menu: ${menu},
+                                    <#if app_settings.logoTopHref??>topLogo: '${app_settings.logoTopHref}', </#if>
+                                    <#if app_settings.logoTopHref??>topLogoMaxHeight: ${app_settings.logoTopMaxHeight}, </#if>
+                                    <#if app_settings.logoNavBarHref?has_content>navBarLogo: '${app_settings.logoNavBarHref}', </#if>
+                                    <#if plugin_id??>selectedPlugin: '${plugin_id}', </#if>
+                                    authenticated: ${authenticated?c},
+                                    loginHref: '/login',
+                                    helpLink: {
+                                        label: 'Help',
+                                        href: 'https://molgenis.gitbooks.io/molgenis/content/'
+                                    }
+                                }
+                            }
+                        };
+                        return createElement(context.default.HeaderComponent, propsData);
+                    }
+                }).$mount('#molgenis-menu')
             })
 
-            requirejs(["context.umd", "vue"], function(context, Vue) {
-                console.log('I am here!', context, Vue)
+            requirejs(["context.umd", "https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"], function(context, Vue) {
                 new Vue({
-                    render: createElement => createElement(context.default.HEaderCOmponent)
-                }).$mount('#molgenis-site-menu')
+                    render: createElement => {
+                        const propsData = {
+                            props: {
+                                cookieWall: ${cookieWall?c}
+                            }
+                        };
+                        return createElement(context.default.CookieWall, propsData);
+                    }
+                })
             })
         </script>
 
@@ -116,26 +149,8 @@
             <@topmenu menu plugin_id pluginid_with_query_string/>
         </#if>
     <#else>
-        <#assign menu=gson.toJson(menu)>
-
-        <#-- VUE -->
-        <script type="text/javascript">
-            window.molgenisMenu = {
-                menu: ${menu}
-                <#if app_settings.logoTopHref??>, topLogo: '${app_settings.logoTopHref}'</#if>
-                <#if app_settings.logoTopHref??>, topLogoMaxHeight: ${app_settings.logoTopMaxHeight}</#if>
-                <#if app_settings.logoNavBarHref?has_content>, navBarLogo: '${app_settings.logoNavBarHref}'</#if>
-                <#if plugin_id??>, selectedPlugin: '${plugin_id}'</#if>
-                , authenticated: ${authenticated?c}
-                , loginHref: '/login'
-                , helpLink: {label: 'Help', href: 'https://molgenis.gitbooks.io/molgenis/content/'}
-            }
-
-            window.cookieWall = ${cookieWall?c}
-        </script>
-
         <#-- Include the Vue version of the molgenis menu -->
-        <div id="molgenis-site-menu"></div>
+        <div id="molgenis-menu"></div>
     </#if>
 
 <#-- Start application content -->
